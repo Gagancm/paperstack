@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Star, Folder, Delete } from 'react-iconly'
-import { Copy } from 'lucide-react' // Copy not available in Iconly
-import { useAppStore } from '../../store/appStore'
+import { Copy, X, Check, Upload, Tag } from 'lucide-react'
+import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 // Notebook color options using our existing color scheme
 const NOTEBOOK_COLORS = {
@@ -17,12 +17,24 @@ const NOTEBOOK_COLORS = {
   gray: { main: '#8E8E93', spine: '#727276', cover: '#AEAEB2', accent: '#C7C7CB' },
 }
 
+const COLOR_OPTIONS = [
+  { id: 'blue', color: '#0A84FF' },
+  { id: 'orange', color: '#FF9500' },
+  { id: 'yellow', color: '#FFD60A' },
+  { id: 'green', color: '#30D158' },
+  { id: 'teal', color: '#48C9B0' },
+  { id: 'red', color: '#FF453A' },
+  { id: 'pink', color: '#FF375F' },
+  { id: 'purple', color: '#BF5AF2' },
+  { id: 'gray', color: '#8E8E93' },
+]
+
 export default function NoteCard({ note, onClick, isSelected }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState(null)
   const menuButtonRef = useRef(null)
   
-  const { togglePinNote, deleteNote, duplicateNote, folders, updateNote, addToast } = useAppStore()
+  const { togglePinNote, deleteNote, duplicateNote, folders, updateNote, addToast, labels, addLabelToNote, removeLabelFromNote } = useAppStore()
   
   // Get color from note or default to blue
   const colorKey = note.colorKey || 'blue'
@@ -32,7 +44,11 @@ export default function NoteCard({ note, onClick, isSelected }) {
     e.stopPropagation()
     if (menuButtonRef.current) {
       const r = menuButtonRef.current.getBoundingClientRect()
-      setMenuPosition({ top: r.bottom + 4, left: Math.max(8, r.left - 100) })
+      // Position menu to the right of the card
+      setMenuPosition({ 
+        top: Math.max(100, r.top - 100), 
+        left: Math.min(window.innerWidth - 280, r.right + 10)
+      })
     }
     setMenuOpen(true)
   }
@@ -42,34 +58,8 @@ export default function NoteCard({ note, onClick, isSelected }) {
     onClick?.(note.id)
   }
 
-  const handleToggleFavorite = (e) => {
-    e.stopPropagation()
-    togglePinNote(note.id)
-    setMenuOpen(false)
-  }
-
-  const handleDelete = (e) => {
-    e.stopPropagation()
-    deleteNote(note.id)
-    setMenuOpen(false)
-  }
-
-  const handleDuplicate = (e) => {
-    e.stopPropagation()
-    duplicateNote(note.id)
-    setMenuOpen(false)
-  }
-
-  const handleMoveToFolder = (e, folderId) => {
-    e.stopPropagation()
-    updateNote(note.id, { folderId: folderId || null })
-    const folderName = folderId ? folders.find(f => f.id === folderId)?.name : 'No Folder'
-    addToast({ message: `Moved to ${folderName}` })
-    setMenuOpen(false)
-  }
-
   const handleCloseMenu = (e) => {
-    e.stopPropagation()
+    if (e) e.stopPropagation()
     setMenuOpen(false)
   }
 
@@ -170,15 +160,19 @@ export default function NoteCard({ note, onClick, isSelected }) {
 
       {/* Menu */}
       {menuOpen && menuPosition && createPortal(
-        <NoteMenu
+        <NoteEditMenu
           menuPosition={menuPosition}
           note={note}
           folders={folders}
-          onToggleFavorite={handleToggleFavorite}
-          onDuplicate={handleDuplicate}
-          onMoveToFolder={handleMoveToFolder}
-          onDelete={handleDelete}
+          labels={labels}
           onClose={handleCloseMenu}
+          updateNote={updateNote}
+          togglePinNote={togglePinNote}
+          deleteNote={deleteNote}
+          duplicateNote={duplicateNote}
+          addToast={addToast}
+          addLabelToNote={addLabelToNote}
+          removeLabelFromNote={removeLabelFromNote}
         />,
         document.body
       )}
@@ -186,83 +180,197 @@ export default function NoteCard({ note, onClick, isSelected }) {
   )
 }
 
-function NoteMenu({ menuPosition, note, folders, onToggleFavorite, onDuplicate, onMoveToFolder, onDelete, onClose }) {
-  const [showFolders, setShowFolders] = useState(false)
+function NoteEditMenu({ 
+  menuPosition, 
+  note, 
+  folders, 
+  labels,
+  onClose, 
+  updateNote, 
+  togglePinNote, 
+  deleteNote, 
+  duplicateNote, 
+  addToast,
+  addLabelToNote,
+  removeLabelFromNote
+}) {
+  const [activeTab, setActiveTab] = useState('color') // 'color' or 'tag'
+  const [title, setTitle] = useState(note.title || '')
+  const [selectedColor, setSelectedColor] = useState(note.colorKey || 'blue')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    // Focus input when menu opens
+    setTimeout(() => inputRef.current?.focus(), 100)
+  }, [])
+
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value)
+    updateNote(note.id, { title: e.target.value })
+  }
+
+  const handleColorSelect = (colorId) => {
+    setSelectedColor(colorId)
+    updateNote(note.id, { colorKey: colorId })
+  }
+
+  const handleToggleLabel = (labelId) => {
+    if (note.labels?.includes(labelId)) {
+      removeLabelFromNote(note.id, labelId)
+    } else {
+      addLabelToNote(note.id, labelId)
+    }
+  }
+
+  const handleMove = () => {
+    addToast({ message: 'Move feature coming soon' })
+    onClose()
+  }
+
+  const handleExport = () => {
+    addToast({ message: 'Export feature coming soon' })
+    onClose()
+  }
+
+  const handleDelete = () => {
+    deleteNote(note.id)
+    onClose()
+  }
 
   return (
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
       <div
-        className="fixed bg-[#2C2C2E] rounded-lg shadow-xl z-[9999] min-w-[180px] py-1 border border-[#3A3A3C]"
+        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[260px] overflow-hidden border border-[#3A3A3C]"
         style={{ top: menuPosition.top, left: menuPosition.left }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onToggleFavorite}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
-        >
-          <div className={note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}>
-            <Star set={note.pinned ? 'bold' : 'broken'} size={16} stroke="regular" />
+        {/* Name Input Section */}
+        <div className="p-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl flex items-center px-3 py-2.5">
+            <input
+              ref={inputRef}
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Name"
+              className="flex-1 bg-transparent text-white text-[17px] outline-none placeholder-[#8E8E93]"
+            />
+            <button 
+              onClick={onClose}
+              className="p-1 rounded-full bg-[#3A3A3C] hover:bg-[#4A4A4C] transition-colors ml-2"
+            >
+              <X size={14} className="text-[#8E8E93]" />
+            </button>
           </div>
-          <span className="text-sm">{note.pinned ? 'Remove from Favorites' : 'Add to Favorites'}</span>
-        </button>
+        </div>
 
-        <div className="h-px bg-[#3A3A3C] mx-2" />
+        {/* Color/Tag Tabs */}
+        <div className="px-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl p-1 flex">
+            <button
+              onClick={() => setActiveTab('color')}
+              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
+                activeTab === 'color' 
+                  ? 'bg-[#3A3A3C] text-white' 
+                  : 'text-[#8E8E93]'
+              }`}
+            >
+              Color
+            </button>
+            <button
+              onClick={() => setActiveTab('tag')}
+              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
+                activeTab === 'tag' 
+                  ? 'bg-[#3A3A3C] text-white' 
+                  : 'text-[#8E8E93]'
+              }`}
+            >
+              Tag
+            </button>
+          </div>
 
-        <div className="relative">
-          <button
-            onClick={() => setShowFolders(!showFolders)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
-          >
-            <div className="text-[#8E8E93]">
-              <Folder set="broken" size={16} stroke="regular" />
-            </div>
-            <span className="text-sm flex-1">Move to Folder</span>
-            <div className={`text-[#8E8E93] transition-transform ${showFolders ? 'rotate-180' : ''}`}>
-              <ChevronDown set="broken" size={14} stroke="regular" />
-            </div>
-          </button>
-          
-          {showFolders && (
-            <div className="bg-[#1C1C1E] py-1">
-              <button
-                onClick={(e) => onMoveToFolder(e, null)}
-                className={`w-full px-6 py-2 text-left text-sm hover:bg-[#3A3A3C] ${!note.folderId ? 'text-[#0A84FF]' : 'text-white'}`}
-              >
-                No Folder
-              </button>
-              {folders.map((folder) => (
+          {/* Color Options */}
+          {activeTab === 'color' && (
+            <div className="flex items-center justify-center gap-2 mt-3 pb-1">
+              {COLOR_OPTIONS.map((opt) => (
                 <button
-                  key={folder.id}
-                  onClick={(e) => onMoveToFolder(e, folder.id)}
-                  className={`w-full px-6 py-2 text-left text-sm hover:bg-[#3A3A3C] ${note.folderId === folder.id ? 'text-[#0A84FF]' : 'text-white'}`}
+                  key={opt.id}
+                  onClick={() => handleColorSelect(opt.id)}
+                  className="relative w-7 h-7 rounded-full transition-transform hover:scale-110"
+                  style={{ backgroundColor: opt.color }}
                 >
-                  {folder.name}
+                  {selectedColor === opt.id && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Check size={16} className="text-white" strokeWidth={3} />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
           )}
+
+          {/* Tag Options */}
+          {activeTab === 'tag' && (
+            <div className="flex items-center justify-center gap-2 mt-3 pb-1 flex-wrap">
+              {labels.length > 0 ? (
+                labels.map((label) => (
+                  <button
+                    key={label.id}
+                    onClick={() => handleToggleLabel(label.id)}
+                    className={`relative w-7 h-7 rounded-full transition-transform hover:scale-110 ${
+                      note.labels?.includes(label.id) ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1C1C1E]' : ''
+                    }`}
+                    style={{ backgroundColor: LABEL_COLORS[label.color] }}
+                    title={label.name}
+                  >
+                    {note.labels?.includes(label.id) && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Check size={14} className="text-white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <p className="text-[#8E8E93] text-sm py-2">No tags created</p>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="h-px bg-[#3A3A3C] mx-2" />
+        {/* Action Buttons */}
+        <div className="px-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+            {/* Move */}
+            <button
+              onClick={handleMove}
+              className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+            >
+              <Folder set="broken" size={22} stroke="regular" primaryColor="#fff" />
+              <span className="text-white text-[17px]">Move</span>
+            </button>
 
-        <button
-          onClick={onDuplicate}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
-        >
-          <Copy size={16} className="text-[#8E8E93]" />
-          <span className="text-sm">Duplicate</span>
-        </button>
+            {/* Export */}
+            <button
+              onClick={handleExport}
+              className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
+            >
+              <Upload size={22} className="text-white" />
+              <span className="text-white text-[17px]">Export</span>
+            </button>
+          </div>
+        </div>
 
-        <div className="h-px bg-[#3A3A3C] mx-2" />
-
-        <button
-          onClick={onDelete}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[#FF453A] hover:bg-[#3A3A3C]"
-        >
-          <Delete set="broken" size={16} stroke="regular" />
-          <span className="text-sm">Delete</span>
-        </button>
+        {/* Delete Button */}
+        <div className="px-3 pb-3">
+          <button
+            onClick={handleDelete}
+            className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
+          >
+            <Delete set="broken" size={22} stroke="regular" primaryColor="#FF453A" />
+            <span className="text-[#FF453A] text-[17px]">Move to Trash</span>
+          </button>
+        </div>
       </div>
     </>
   )

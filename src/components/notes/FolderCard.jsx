@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Delete, Star, Edit } from 'react-iconly'
-import { useAppStore } from '../../store/appStore'
+import { ChevronDown, Delete, Star, Folder } from 'react-iconly'
+import { X, Check, Upload } from 'lucide-react'
+import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 // Folder color options using our existing color scheme
 const FOLDER_COLORS = {
@@ -16,12 +17,24 @@ const FOLDER_COLORS = {
   gray: { main: '#8E8E93', light: '#AEAEB2', dark: '#7A7A7E' },
 }
 
+const COLOR_OPTIONS = [
+  { id: 'blue', color: '#0A84FF' },
+  { id: 'orange', color: '#FF9500' },
+  { id: 'yellow', color: '#FFD60A' },
+  { id: 'green', color: '#30D158' },
+  { id: 'teal', color: '#48C9B0' },
+  { id: 'red', color: '#FF453A' },
+  { id: 'pink', color: '#FF375F' },
+  { id: 'purple', color: '#BF5AF2' },
+  { id: 'gray', color: '#8E8E93' },
+]
+
 export default function FolderCard({ folder, noteCount = 0, onClick, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState(null)
   const menuButtonRef = useRef(null)
   
-  const { updateFolder, addToast } = useAppStore()
+  const { updateFolder, addToast, labels } = useAppStore()
 
   // Get color from folder or default to blue
   const colorKey = folder.colorKey || 'blue'
@@ -31,7 +44,11 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
     e.stopPropagation()
     if (menuButtonRef.current) {
       const r = menuButtonRef.current.getBoundingClientRect()
-      setMenuPosition({ top: r.bottom + 4, left: Math.max(8, r.left - 100) })
+      // Position menu to the right of the card
+      setMenuPosition({ 
+        top: Math.max(100, r.top - 100), 
+        left: Math.min(window.innerWidth - 280, r.right + 10)
+      })
     }
     setMenuOpen(true)
   }
@@ -42,20 +59,7 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
   }
 
   const handleCloseMenu = (e) => {
-    e.stopPropagation()
-    setMenuOpen(false)
-  }
-
-  const handleToggleFavorite = (e) => {
-    e.stopPropagation()
-    updateFolder(folder.id, { pinned: !folder.pinned })
-    addToast({ message: folder.pinned ? 'Removed from favorites' : 'Added to favorites' })
-    setMenuOpen(false)
-  }
-
-  const handleDelete = (e) => {
-    e.stopPropagation()
-    onDelete?.(folder)
+    if (e) e.stopPropagation()
     setMenuOpen(false)
   }
 
@@ -136,52 +140,195 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
 
       {/* Menu dropdown */}
       {menuOpen && menuPosition && createPortal(
-        <>
-          <div className="fixed inset-0 z-[9998]" onClick={handleCloseMenu} />
-          <div
-            className="fixed bg-[#2C2C2E] rounded-lg shadow-xl z-[9999] min-w-[180px] py-1 border border-[#3A3A3C]"
-            style={{ top: menuPosition.top, left: menuPosition.left }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Favorite */}
-            <button
-              onClick={handleToggleFavorite}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
-            >
-              <div className={folder.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}>
-                <Star set={folder.pinned ? 'bold' : 'broken'} size={16} stroke="regular" />
-              </div>
-              <span className="text-sm">{folder.pinned ? 'Remove from Favorites' : 'Add to Favorites'}</span>
-            </button>
-
-            <div className="h-px bg-[#3A3A3C] mx-2" />
-
-            {/* Rename */}
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
-            >
-              <div className="text-[#8E8E93]">
-                <Edit set="broken" size={16} stroke="regular" />
-              </div>
-              <span className="text-sm">Rename</span>
-            </button>
-
-            <div className="h-px bg-[#3A3A3C] mx-2" />
-
-            {/* Delete */}
-            <button
-              onClick={handleDelete}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[#FF453A] hover:bg-[#3A3A3C]"
-            >
-              <Delete set="broken" size={16} stroke="regular" />
-              <span className="text-sm">Delete</span>
-            </button>
-          </div>
-        </>,
+        <FolderEditMenu
+          menuPosition={menuPosition}
+          folder={folder}
+          labels={labels}
+          onClose={handleCloseMenu}
+          updateFolder={updateFolder}
+          onDelete={onDelete}
+          addToast={addToast}
+        />,
         document.body
       )}
     </div>
+  )
+}
+
+function FolderEditMenu({ 
+  menuPosition, 
+  folder, 
+  labels,
+  onClose, 
+  updateFolder, 
+  onDelete,
+  addToast
+}) {
+  const [activeTab, setActiveTab] = useState('color') // 'color' or 'tag'
+  const [name, setName] = useState(folder.name || '')
+  const [selectedColor, setSelectedColor] = useState(folder.colorKey || 'blue')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    // Focus input when menu opens
+    setTimeout(() => inputRef.current?.focus(), 100)
+  }, [])
+
+  const handleNameChange = (e) => {
+    setName(e.target.value)
+    updateFolder(folder.id, { name: e.target.value })
+  }
+
+  const handleColorSelect = (colorId) => {
+    setSelectedColor(colorId)
+    updateFolder(folder.id, { colorKey: colorId })
+  }
+
+  const handleMove = () => {
+    addToast({ message: 'Move feature coming soon' })
+    onClose()
+  }
+
+  const handleExport = () => {
+    addToast({ message: 'Export feature coming soon' })
+    onClose()
+  }
+
+  const handleDelete = () => {
+    onDelete?.(folder)
+    onClose()
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[9998]" onClick={onClose} />
+      <div
+        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[260px] overflow-hidden border border-[#3A3A3C]"
+        style={{ top: menuPosition.top, left: menuPosition.left }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Name Input Section */}
+        <div className="p-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl flex items-center px-3 py-2.5">
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={handleNameChange}
+              placeholder="Name"
+              className="flex-1 bg-transparent text-white text-[17px] outline-none placeholder-[#8E8E93]"
+            />
+            <button 
+              onClick={onClose}
+              className="p-1 rounded-full bg-[#3A3A3C] hover:bg-[#4A4A4C] transition-colors ml-2"
+            >
+              <X size={14} className="text-[#8E8E93]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Color/Tag Tabs */}
+        <div className="px-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl p-1 flex">
+            <button
+              onClick={() => setActiveTab('color')}
+              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
+                activeTab === 'color' 
+                  ? 'bg-[#3A3A3C] text-white' 
+                  : 'text-[#8E8E93]'
+              }`}
+            >
+              Color
+            </button>
+            <button
+              onClick={() => setActiveTab('tag')}
+              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
+                activeTab === 'tag' 
+                  ? 'bg-[#3A3A3C] text-white' 
+                  : 'text-[#8E8E93]'
+              }`}
+            >
+              Tag
+            </button>
+          </div>
+
+          {/* Color Options */}
+          {activeTab === 'color' && (
+            <div className="flex items-center justify-center gap-2 mt-3 pb-1">
+              {COLOR_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => handleColorSelect(opt.id)}
+                  className="relative w-7 h-7 rounded-full transition-transform hover:scale-110"
+                  style={{ backgroundColor: opt.color }}
+                >
+                  {selectedColor === opt.id && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Check size={16} className="text-white" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Tag Options */}
+          {activeTab === 'tag' && (
+            <div className="flex items-center justify-center gap-2 mt-3 pb-1 flex-wrap">
+              {labels.length > 0 ? (
+                labels.map((label) => (
+                  <button
+                    key={label.id}
+                    onClick={() => {
+                      addToast({ message: 'Folder tags coming soon' })
+                    }}
+                    className="relative w-7 h-7 rounded-full transition-transform hover:scale-110"
+                    style={{ backgroundColor: LABEL_COLORS[label.color] }}
+                    title={label.name}
+                  />
+                ))
+              ) : (
+                <p className="text-[#8E8E93] text-sm py-2">No tags created</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="px-3 pb-2">
+          <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+            {/* Move */}
+            <button
+              onClick={handleMove}
+              className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+            >
+              <Folder set="broken" size={22} stroke="regular" primaryColor="#fff" />
+              <span className="text-white text-[17px]">Move</span>
+            </button>
+
+            {/* Export */}
+            <button
+              onClick={handleExport}
+              className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
+            >
+              <Upload size={22} className="text-white" />
+              <span className="text-white text-[17px]">Export</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Delete Button */}
+        <div className="px-3 pb-3">
+          <button
+            onClick={handleDelete}
+            className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
+          >
+            <Delete set="broken" size={22} stroke="regular" primaryColor="#FF453A" />
+            <span className="text-[#FF453A] text-[17px]">Move to Trash</span>
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
 

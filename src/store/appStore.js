@@ -37,7 +37,8 @@ export const useAppStore = create(
 
       // UI state
       sidebarOpen: false,
-      viewMode: 'list', // 'list' or 'grid'
+      viewMode: 'grid', // 'list' or 'grid'
+      sortBy: 'lastModified', // 'lastModified', 'dateCreated', 'name', 'type'
       theme: 'dark', // 'light', 'dark', or 'system'
       editorMode: 'type', // 'type' or 'draw'
       defaultPenTool: 'ballpoint',
@@ -57,7 +58,7 @@ export const useAppStore = create(
 
       // Sync state
       syncStatus: 'saved', // 'saved', 'saving', 'offline', 'error'
-      lastSyncTime: null,
+      lastSyncTime: new Date().toISOString(),
 
       // Toast notifications
       toasts: [],
@@ -71,6 +72,7 @@ export const useAppStore = create(
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setViewMode: (mode) => set({ viewMode: mode }),
+      setSortBy: (sortBy) => set({ sortBy }),
       setTheme: (theme) => set({ theme }),
       setEditorMode: (mode) => set({ editorMode: mode }),
       setDefaultPenTool: (tool) => set({ defaultPenTool: tool }),
@@ -326,11 +328,26 @@ export const useAppStore = create(
           )
         }
 
-        // Sort: pinned first, then by updatedAt
+        // Sort: pinned first, then by sortBy preference
+        const sortBy = state.sortBy || 'lastModified'
         filtered.sort((a, b) => {
+          // Pinned items always first
           if (a.pinned && !b.pinned) return -1
           if (!a.pinned && b.pinned) return 1
-          return new Date(b.updatedAt) - new Date(a.updatedAt)
+          
+          // Then sort by preference
+          switch (sortBy) {
+            case 'name':
+              return (a.title || 'Untitled').localeCompare(b.title || 'Untitled')
+            case 'dateCreated':
+              return new Date(b.createdAt) - new Date(a.createdAt)
+            case 'type':
+              // Folders first (if applicable), then notes
+              return 0
+            case 'lastModified':
+            default:
+              return new Date(b.updatedAt) - new Date(a.updatedAt)
+          }
         })
 
         return filtered
@@ -368,6 +385,7 @@ export const useAppStore = create(
         labels: state.labels,
         theme: state.theme,
         viewMode: state.viewMode,
+        sortBy: state.sortBy,
         defaultPenTool: state.defaultPenTool,
       }),
     }
