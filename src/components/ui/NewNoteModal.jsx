@@ -1,43 +1,35 @@
 import { useState } from 'react'
-import { Check, Plus, X } from 'lucide-react'
-import { useAppStore, LABEL_COLORS } from '../../store/appStore'
+import { TickSquare } from 'react-iconly'
+import { useAppStore } from '../../store/appStore'
+import { NOTEBOOK_COLORS } from '../notes/NoteCard'
 
-const COVER_DESIGNS = [
-  { id: 'coral-geometric', name: 'Coral', color: '#E8A5A5' },
-  { id: 'blue-waves', name: 'Ocean', color: '#5B9BD5' },
-  { id: 'purple-blocks', name: 'Violet', color: '#9B7ED9' },
-  { id: 'green-layers', name: 'Forest', color: '#58D68D' },
-  { id: 'orange-sunset', name: 'Sunset', color: '#F5A962' },
-  { id: 'pink-abstract', name: 'Blossom', color: '#F1948A' },
-  { id: 'teal-minimal', name: 'Teal', color: '#48C9B0' },
-  { id: 'yellow-bright', name: 'Sunny', color: '#F4D03F' },
-]
+const COLOR_OPTIONS = Object.keys(NOTEBOOK_COLORS)
 
 export default function NewNoteModal({ isOpen, onClose }) {
-  const { createNote, updateNote, selectNote, labels, createLabel, folders } = useAppStore()
+  const { createNote, updateNote, selectNote, folders } = useAppStore()
   
   const [name, setName] = useState('Untitled Notebook')
-  const [selectedCover, setSelectedCover] = useState(0)
+  const [selectedColor, setSelectedColor] = useState('blue')
   const [selectedFolder, setSelectedFolder] = useState(null)
 
   if (!isOpen) return null
 
   const handleCreate = () => {
     const noteId = createNote()
-    const cover = COVER_DESIGNS[selectedCover]
     
     updateNote(noteId, {
       title: name || 'Untitled Notebook',
-      coverColor: cover?.color,
-      coverDesignId: cover?.id,
+      colorKey: selectedColor,
       folderId: selectedFolder,
     })
     selectNote(noteId)
     onClose()
     setName('Untitled Notebook')
-    setSelectedCover(0)
+    setSelectedColor('blue')
     setSelectedFolder(null)
   }
+
+  const colors = NOTEBOOK_COLORS[selectedColor]
 
   return (
     <>
@@ -54,6 +46,47 @@ export default function NewNoteModal({ isOpen, onClose }) {
 
           {/* Content */}
           <div className="p-5">
+            {/* Preview - taller notebook style */}
+            <div className="flex justify-center mb-6">
+              <div className="relative w-[70px] h-[90px]">
+                {/* Shadow */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[5px] rounded-[50%] bg-black/30 blur-[2px]" />
+                
+                {/* Notebook body */}
+                <div 
+                  className="absolute bottom-[3px] left-0 right-0 h-[82px] rounded-lg overflow-hidden flex"
+                  style={{ backgroundColor: colors.main }}
+                >
+                  {/* Spine */}
+                  <div 
+                    className="w-[8px] h-full flex-shrink-0"
+                    style={{ backgroundColor: colors.spine }}
+                  />
+                  
+                  {/* Inner accent */}
+                  <div 
+                    className="w-[6px] h-full flex-shrink-0"
+                    style={{ backgroundColor: colors.accent }}
+                  />
+                  
+                  {/* Cover */}
+                  <div 
+                    className="flex-1 h-full relative"
+                    style={{ 
+                      background: `linear-gradient(145deg, ${colors.cover} 0%, ${colors.main} 60%, ${colors.spine} 100%)`,
+                    }}
+                  >
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.1) 100%)',
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Name */}
             <div className="mb-5">
               <label className="text-[#8E8E93] text-xs uppercase tracking-wide mb-2 block">Name</label>
@@ -81,28 +114,29 @@ export default function NewNoteModal({ isOpen, onClose }) {
               </select>
             </div>
 
-            {/* Cover */}
+            {/* Color */}
             <div>
-              <label className="text-[#8E8E93] text-xs uppercase tracking-wide mb-3 block">Cover Design</label>
-              <div className="grid grid-cols-4 gap-3">
-                {COVER_DESIGNS.map((cover, index) => (
-                  <button
-                    key={cover.id}
-                    onClick={() => setSelectedCover(index)}
-                    className={`aspect-[3/4] rounded-xl transition-all ${
-                      selectedCover === index ? 'ring-2 ring-[#0A84FF] scale-105' : ''
-                    }`}
-                    style={{ backgroundColor: cover.color }}
-                  >
-                    {selectedCover === index && (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                          <Check size={14} className="text-[#0A84FF]" />
+              <label className="text-[#8E8E93] text-xs uppercase tracking-wide mb-3 block">Cover Color</label>
+              <div className="flex flex-wrap gap-3">
+                {COLOR_OPTIONS.map((colorKey) => {
+                  const color = NOTEBOOK_COLORS[colorKey]
+                  return (
+                    <button
+                      key={colorKey}
+                      onClick={() => setSelectedColor(colorKey)}
+                      className={`w-10 h-10 rounded-full transition-all ${
+                        selectedColor === colorKey ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2C2C2E] scale-110' : ''
+                      }`}
+                      style={{ backgroundColor: color.main }}
+                    >
+                      {selectedColor === colorKey && (
+                        <div className="w-full h-full flex items-center justify-center text-white">
+                          <TickSquare set="bold" size={18} />
                         </div>
-                      </div>
-                    )}
-                  </button>
-                ))}
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>

@@ -62,12 +62,12 @@ export default function NotesList() {
 
       <div className="py-6 px-[30px]">
         {hasContent ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             {/* Folders Section */}
             {showFolders && folders.length > 0 && (
               <div>
-                <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-3">Folders</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+                <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">Folders</h3>
+                <div className="flex flex-wrap gap-4">
                   {folders.map((folder) => (
                     <FolderCard
                       key={folder.id}
@@ -84,8 +84,8 @@ export default function NotesList() {
             {/* Notes Section */}
             {filteredNotes.length > 0 && (
               <div>
-                {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-3">Notes</h3>}
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+                {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">Notes</h3>}
+                <div className="flex flex-wrap gap-4">
                   {filteredNotes.map((note) => (
                     <NoteCard
                       key={note.id}

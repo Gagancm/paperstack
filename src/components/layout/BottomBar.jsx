@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FilePlus, FileDown, Plus, FolderPlus, Settings, FileText, Folder } from 'lucide-react'
+import { Document, Download, Plus, Folder, Setting, Paper } from 'react-iconly'
 import { useAppStore } from '../../store/appStore'
 import NewNoteModal from '../ui/NewNoteModal'
 
@@ -30,12 +30,12 @@ export default function BottomBar() {
         {/* Capsule bar – machined metal pill */}
         <div className="bar-capsule flex items-center justify-center gap-2 md:gap-6 px-4 md:px-6 h-11 w-full max-w-xl min-w-0 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <BottomBarItem
-            icon={<FilePlus size={20} className="text-accent-amber shrink-0" />}
+            icon={<div className="text-accent-amber shrink-0"><Document set="broken" size={20} stroke="regular" /></div>}
             label="Quick Note"
             onClick={handleNewNote}
           />
           <BottomBarItem
-            icon={<FileDown size={20} className="text-text-secondary shrink-0" />}
+            icon={<div className="text-text-secondary shrink-0"><Download set="broken" size={20} stroke="regular" /></div>}
             label="Import PDF"
             onClick={() => {}}
           />
@@ -47,7 +47,7 @@ export default function BottomBar() {
               className="btn-accent flex items-center justify-center w-9 h-9 rounded-full shrink-0 touch-manipulation"
               aria-label="Add"
             >
-              <Plus size={20} strokeWidth={2.5} className={`transition-transform ${showQuickMenu ? 'rotate-45' : ''}`} />
+              <Plus set="broken" size={20} stroke="bold" style={{ transition: 'transform 0.2s', transform: showQuickMenu ? 'rotate(45deg)' : 'none' }} />
             </button>
 
             {/* Quick Add Menu */}
@@ -59,7 +59,7 @@ export default function BottomBar() {
                     onClick={handleNewNote}
                     className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
                   >
-                    <FileText size={18} className="text-accent-amber shrink-0" />
+                    <div className="text-accent-amber shrink-0"><Paper set="broken" size={18} stroke="regular" /></div>
                     <span className="text-text-primary text-sm font-medium">New Note</span>
                   </button>
                   <div className="dropdown-divider" />
@@ -67,7 +67,7 @@ export default function BottomBar() {
                     onClick={handleNewFolder}
                     className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
                   >
-                    <Folder size={18} className="text-accent-amber shrink-0" />
+                    <div className="text-accent-amber shrink-0"><Folder set="broken" size={18} stroke="regular" /></div>
                     <span className="text-text-primary text-sm font-medium">New Folder</span>
                   </button>
                 </div>
@@ -76,12 +76,12 @@ export default function BottomBar() {
           </div>
 
           <BottomBarItem
-            icon={<FolderPlus size={20} className="text-text-secondary shrink-0" />}
+            icon={<div className="text-text-secondary shrink-0"><Folder set="broken" size={20} stroke="regular" /></div>}
             label="New Folder"
             onClick={handleNewFolder}
           />
           <BottomBarItem
-            icon={<Settings size={20} className="text-text-secondary shrink-0" />}
+            icon={<div className="text-text-secondary shrink-0"><Setting set="broken" size={20} stroke="regular" /></div>}
             label="Settings"
             onClick={() => {}}
           />

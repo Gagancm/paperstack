@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Filter, Plus, ChevronDown, Cloud, LayoutGrid } from 'lucide-react'
+import { Filter, Plus, ChevronDown, Category } from 'react-iconly'
+import { Cloud } from 'lucide-react' // Cloud not available in Iconly
 import { useAppStore } from '../../store/appStore'
 import NewNoteModal from '../ui/NewNoteModal'
 import NewFolderModal from '../ui/NewFolderModal'
@@ -57,9 +58,13 @@ export default function ContentHeader() {
               onClick={() => setFilterOpen(!filterOpen)}
               className="flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-lg hover:bg-[#3A3A3C] transition-colors"
             >
-              <Filter size={16} className="text-[#8E8E93]" />
+              <div className="text-[#8E8E93]">
+                <Filter set="broken" size={16} stroke="regular" />
+              </div>
               <span className="text-white text-sm">{getFilterLabel()}</span>
-              <ChevronDown size={14} className="text-[#8E8E93]" />
+              <div className="text-[#8E8E93]">
+                <ChevronDown set="broken" size={14} stroke="regular" />
+              </div>
             </button>
             
             {filterOpen && (
@@ -95,7 +100,7 @@ export default function ContentHeader() {
                 onClick={() => setNewMenuOpen(!newMenuOpen)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A84FF] hover:bg-[#0A84FF]/80 transition-colors"
               >
-                <Plus size={16} className="text-white" />
+                <Plus set="broken" size={16} stroke="regular" primaryColor="white" />
                 <span className="text-white text-sm font-medium">New</span>
               </button>
               
@@ -130,11 +135,11 @@ export default function ContentHeader() {
             <div className="w-px h-5 bg-[#3A3A3C] mx-2" />
 
             {/* Grid view icon */}
-            <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors">
-              <LayoutGrid size={18} className="text-[#8E8E93]" />
+            <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93]">
+              <Category set="broken" size={18} stroke="regular" />
             </button>
 
-            {/* Sync icon */}
+            {/* Sync icon - Cloud not available in Iconly, keeping lucide */}
             <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors">
               <Cloud size={18} className="text-[#8E8E93]" />
             </button>

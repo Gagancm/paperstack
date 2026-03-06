@@ -1,4 +1,4 @@
-import { Search, Bell, User } from 'lucide-react'
+import { Search, Notification, User } from 'react-iconly'
 import { useAppStore } from '../../store/appStore'
 
 export default function TopBar() {
@@ -16,10 +16,9 @@ export default function TopBar() {
       {/* Center: Search - always centered */}
       <div className="flex-1 flex justify-center">
         <div className="relative w-full max-w-md">
-          <Search
-            size={16}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
-          />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6E73]">
+            <Search set="broken" size={16} stroke="regular" />
+          </div>
           <input
             type="search"
             placeholder="Search on Web..."
@@ -32,14 +31,16 @@ export default function TopBar() {
 
       {/* Right: Actions - fixed width to balance left side */}
       <div className="flex items-center gap-2 shrink-0">
-        <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors">
-          <Bell size={22} className="text-[#8E8E93]" />
+        <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93]">
+          <Notification set="broken" size={22} stroke="regular" />
         </button>
         <button className="w-8 h-8 rounded-full bg-[#3A3A3C] flex items-center justify-center">
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
-            <User size={18} className="text-[#8E8E93]" />
+            <div className="text-[#8E8E93]">
+              <User set="broken" size={18} stroke="regular" />
+            </div>
           )}
         </button>
       </div>

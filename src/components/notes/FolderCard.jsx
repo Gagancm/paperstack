@@ -1,7 +1,20 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Trash2, Star } from 'lucide-react'
+import { ChevronDown, Delete, Star, Edit } from 'react-iconly'
 import { useAppStore } from '../../store/appStore'
+
+// Folder color options using our existing color scheme
+const FOLDER_COLORS = {
+  blue: { main: '#0A84FF', light: '#3BA1FF', dark: '#0070E0' },
+  purple: { main: '#BF5AF2', light: '#D17FF7', dark: '#A347D1' },
+  pink: { main: '#FF375F', light: '#FF6B8A', dark: '#E0274D' },
+  red: { main: '#FF453A', light: '#FF7A72', dark: '#E03830' },
+  orange: { main: '#FF9500', light: '#FFB340', dark: '#E08500' },
+  yellow: { main: '#FFD60A', light: '#FFE347', dark: '#E0BD00' },
+  green: { main: '#30D158', light: '#5EDE7E', dark: '#28B84C' },
+  teal: { main: '#48C9B0', light: '#6DD5C3', dark: '#3AB39B' },
+  gray: { main: '#8E8E93', light: '#AEAEB2', dark: '#7A7A7E' },
+}
 
 export default function FolderCard({ folder, noteCount = 0, onClick, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -10,8 +23,9 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
   
   const { updateFolder, addToast } = useAppStore()
 
-  const folderColor = folder.color || '#d4c4e0'
-  const folderGradient = folder.gradient || `linear-gradient(135deg, ${folderColor} 0%, ${adjustColor(folderColor, -15)} 100%)`
+  // Get color from folder or default to blue
+  const colorKey = folder.colorKey || 'blue'
+  const colors = FOLDER_COLORS[colorKey] || FOLDER_COLORS.blue
 
   const openMenu = (e) => {
     e.stopPropagation()
@@ -22,12 +36,15 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
     setMenuOpen(true)
   }
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const handleClickOutside = () => setMenuOpen(false)
-    setTimeout(() => document.addEventListener('click', handleClickOutside), 0)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [menuOpen])
+  const handleCardClick = () => {
+    if (menuOpen) return
+    onClick?.()
+  }
+
+  const handleCloseMenu = (e) => {
+    e.stopPropagation()
+    setMenuOpen(false)
+  }
 
   const handleToggleFavorite = (e) => {
     e.stopPropagation()
@@ -42,93 +59,112 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
     setMenuOpen(false)
   }
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    const today = new Date()
+    const isToday = d.toDateString() === today.toDateString()
+    if (isToday) {
+      return `Today at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+    }
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
   return (
     <div 
-      className="w-full flex flex-col items-center cursor-pointer group"
-      onClick={onClick}
+      className="flex flex-col items-center cursor-pointer group"
+      onClick={handleCardClick}
+      style={{ width: '120px' }}
     >
-      {/* Folder graphic - aspect ratio matches notes */}
-      <div className="relative w-full aspect-[3/4] mb-2">
-        {/* Back layer (shadow/depth) */}
+      {/* Folder graphic - square macOS style */}
+      <div className="relative w-[100px] h-[85px] mb-2">
+        {/* Shadow */}
         <div 
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-[75%] rounded-xl opacity-40"
-          style={{ background: folderGradient }}
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-[6px] rounded-[50%] bg-black/30 blur-[3px]"
         />
         
-        {/* Middle layer */}
+        {/* Back of folder */}
         <div 
-          className="absolute bottom-1 left-1/2 -translate-x-1/2 w-[92%] h-[78%] rounded-xl opacity-60"
-          style={{ background: folderGradient }}
+          className="absolute bottom-[4px] left-1/2 -translate-x-1/2 w-[95%] h-[65px] rounded-md"
+          style={{ backgroundColor: colors.dark }}
         />
         
-        {/* Main folder body */}
+        {/* Folder tab */}
         <div 
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full h-[80%] rounded-xl transition-transform group-hover:scale-[1.02] shadow-lg"
-          style={{ background: folderGradient }}
+          className="absolute top-0 left-[6px] w-[38%] h-[14px] rounded-t-md"
+          style={{ backgroundColor: colors.main }}
+        />
+        
+        {/* Front of folder */}
+        <div 
+          className="absolute bottom-[4px] left-1/2 -translate-x-1/2 w-[95%] h-[58px] rounded-md transition-transform group-hover:scale-[1.02]"
+          style={{ 
+            background: `linear-gradient(180deg, ${colors.light} 0%, ${colors.main} 100%)`,
+          }}
         >
-          {/* Folder tab */}
+          {/* Folder top edge highlight */}
           <div 
-            className="absolute -top-2.5 left-3 w-[40%] h-4 rounded-t-lg"
-            style={{ background: folderGradient, filter: 'brightness(1.1)' }}
+            className="absolute top-0 left-0 right-0 h-[2px] rounded-t-md"
+            style={{ backgroundColor: colors.light, opacity: 0.8 }}
           />
-          
-          {/* Icon if present */}
-          {folder.icon && (
-            <div className="absolute inset-0 flex items-center justify-center text-2xl mt-1">
-              {folder.icon}
-            </div>
-          )}
           
           {/* Favorite star */}
           {folder.pinned && (
-            <div className="absolute top-2 right-2">
-              <Star size={14} className="text-yellow-500" fill="currentColor" />
-            </div>
-          )}
-          
-          {/* Note count badge */}
-          {noteCount > 0 && (
-            <div className="absolute bottom-2 right-2 bg-black/30 px-2 py-0.5 rounded-full">
-              <span className="text-white text-xs">{noteCount}</span>
+            <div className="absolute top-1.5 right-1.5 text-white/90">
+              <Star set="bold" size={14} filled />
             </div>
           )}
         </div>
       </div>
 
       {/* Folder info */}
-      <div className="w-full flex items-center justify-center gap-1 px-1">
-        <div className="text-center min-w-0 flex-1">
-          <p className="text-white font-medium text-sm truncate">{folder.name}</p>
-          <p className="text-[#8E8E93] text-xs">
-            {noteCount} {noteCount === 1 ? 'note' : 'notes'}
-          </p>
+      <div className="w-full text-center px-1">
+        <div className="flex items-center justify-center gap-0.5">
+          <p className="text-white font-medium text-sm truncate max-w-[85px]">{folder.name}</p>
+          <button
+            ref={menuButtonRef}
+            onClick={openMenu}
+            className="p-0.5 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF]"
+          >
+            <ChevronDown set="broken" size={12} stroke="regular" />
+          </button>
         </div>
-        
-        {/* Dropdown trigger */}
-        <button
-          ref={menuButtonRef}
-          onClick={openMenu}
-          className="p-1.5 rounded-lg hover:bg-[#3A3A3C] transition-colors shrink-0"
-        >
-          <ChevronDown size={14} className="text-[#8E8E93]" />
-        </button>
+        <p className="text-[#8E8E93] text-[11px]">
+          {formatDate(folder.updatedAt)}
+        </p>
       </div>
 
       {/* Menu dropdown */}
       {menuOpen && menuPosition && createPortal(
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setMenuOpen(false)} />
+          <div className="fixed inset-0 z-[9998]" onClick={handleCloseMenu} />
           <div
             className="fixed bg-[#2C2C2E] rounded-lg shadow-xl z-[9999] min-w-[180px] py-1 border border-[#3A3A3C]"
             style={{ top: menuPosition.top, left: menuPosition.left }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Favorite */}
             <button
               onClick={handleToggleFavorite}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
             >
-              <Star size={16} className={folder.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'} fill={folder.pinned ? 'currentColor' : 'none'} />
+              <div className={folder.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}>
+                <Star set={folder.pinned ? 'bold' : 'broken'} size={16} stroke="regular" />
+              </div>
               <span className="text-sm">{folder.pinned ? 'Remove from Favorites' : 'Add to Favorites'}</span>
+            </button>
+
+            <div className="h-px bg-[#3A3A3C] mx-2" />
+
+            {/* Rename */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-white hover:bg-[#3A3A3C]"
+            >
+              <div className="text-[#8E8E93]">
+                <Edit set="broken" size={16} stroke="regular" />
+              </div>
+              <span className="text-sm">Rename</span>
             </button>
 
             <div className="h-px bg-[#3A3A3C] mx-2" />
@@ -138,7 +174,7 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
               onClick={handleDelete}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[#FF453A] hover:bg-[#3A3A3C]"
             >
-              <Trash2 size={16} />
+              <Delete set="broken" size={16} stroke="regular" />
               <span className="text-sm">Delete</span>
             </button>
           </div>
@@ -149,13 +185,4 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
   )
 }
 
-// Helper to darken/lighten a hex color
-function adjustColor(hex, amount) {
-  if (!hex) return '#d4c4e0'
-  const cleanHex = hex.replace('#', '')
-  const num = parseInt(cleanHex, 16)
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount))
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount))
-  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount))
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
-}
+export { FOLDER_COLORS }

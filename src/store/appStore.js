@@ -79,17 +79,15 @@ export const useAppStore = create(
       createNote: () => {
         const newNote = {
           id: generateId(),
-          title: 'Untitled',
+          title: 'Untitled Notebook',
           content: '',
           labels: [],
           pinned: false,
           hasDrawing: false,
           drawingData: null,
           inTrash: false,
-          // Cover settings
-          coverColor: '#E8A5A5',
-          coverDesignId: 'coral-geometric',
-          showCover: true,
+          // Color key for notebook
+          colorKey: 'blue',
           // Paper settings
           paperTemplate: 'blank',
           paperColor: '#FFFFFF',
@@ -187,11 +185,8 @@ export const useAppStore = create(
         const newFolder = {
           id: generateId(),
           name,
-          color: '#d4c4e0',
-          gradient: 'linear-gradient(135deg, #d4c4e0 0%, #c4b3d1 100%)',
-          icon: null,
+          colorKey: 'blue',
           pinned: false,
-          tags: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FileText, Folder, Plus, ChevronDown } from 'lucide-react'
+import { Paper, Folder, Plus, ChevronDown } from 'react-iconly'
 
 export default function NewDropdown({ onNewNote, onNewFolder }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -39,12 +39,11 @@ export default function NewDropdown({ onNewNote, onNewFolder }) {
         aria-label="New"
         aria-expanded={isOpen}
       >
-        <Plus size={18} className="text-text-primary" />
+        <Plus set="broken" size={18} stroke="regular" primaryColor="currentColor" />
         <span className="text-text-primary text-sm font-medium">New</span>
-        <ChevronDown 
-          size={14} 
-          className={`text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-        />
+        <div className={`text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <ChevronDown set="broken" size={14} stroke="regular" />
+        </div>
       </button>
 
       {isOpen && (
@@ -58,7 +57,9 @@ export default function NewDropdown({ onNewNote, onNewFolder }) {
               onClick={handleNewNote}
               className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
             >
-              <FileText size={18} className="text-text-secondary shrink-0" />
+              <div className="text-text-secondary shrink-0">
+                <Paper set="broken" size={18} stroke="regular" />
+              </div>
               <span className="text-text-primary text-sm">New Note</span>
             </button>
             
@@ -68,7 +69,9 @@ export default function NewDropdown({ onNewNote, onNewFolder }) {
               onClick={handleNewFolder}
               className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
             >
-              <Folder size={18} className="text-text-secondary shrink-0" />
+              <div className="text-text-secondary shrink-0">
+                <Folder set="broken" size={18} stroke="regular" />
+              </div>
               <span className="text-text-primary text-sm">New Folder</span>
             </button>
           </div>

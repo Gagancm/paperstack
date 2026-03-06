@@ -4,19 +4,8 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-import { 
-  Type, 
-  Pencil, 
-  MoreHorizontal, 
-  Star,
-  Tag,
-  Copy,
-  Trash2,
-  X,
-  ChevronLeft,
-  FolderInput,
-  Check,
-} from 'lucide-react'
+import { Edit, MoreSquare, Star, Folder, Delete, CloseSquare, ChevronLeft, TickSquare } from 'react-iconly'
+import { Type, Tag, Copy } from 'lucide-react' // These icons not available in Iconly
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 import DrawCanvas from './DrawCanvas'
 import LabelPicker from '../labels/LabelPicker'
@@ -90,7 +79,7 @@ export default function NoteEditor({ onClose }) {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 px-4 py-3 bg-[#1C1C1E] border-b border-[#3A3A3C]">
         <button onClick={handleClose} className="flex items-center gap-1 text-[#0A84FF]">
-          <ChevronLeft size={24} />
+          <ChevronLeft set="broken" size={24} stroke="regular" />
           <span className="font-medium">Notes</span>
         </button>
 
@@ -111,7 +100,7 @@ export default function NoteEditor({ onClose }) {
               editorMode === 'draw' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
             }`}
           >
-            <Pencil size={16} />
+            <Edit set="broken" size={16} stroke="regular" />
             <span>Draw</span>
           </button>
         </div>
@@ -122,16 +111,16 @@ export default function NoteEditor({ onClose }) {
             onClick={() => togglePinNote(note.id)}
             className={`p-2 rounded-lg hover:bg-[#3A3A3C] ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
           >
-            <Star size={20} fill={note.pinned ? 'currentColor' : 'none'} />
+            <Star set={note.pinned ? 'bold' : 'broken'} size={20} stroke="regular" />
           </button>
           
-          <button onClick={() => setShowLabelPicker(!showLabelPicker)} className="p-2 rounded-lg hover:bg-[#3A3A3C]">
-            <Tag size={20} className="text-[#8E8E93]" />
+          <button onClick={() => setShowLabelPicker(!showLabelPicker)} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
+            <Tag size={20} />
           </button>
 
           <div className="relative">
-            <button onClick={() => setShowMenu(!showMenu)} className="p-2 rounded-lg hover:bg-[#3A3A3C]">
-              <MoreHorizontal size={20} className="text-[#8E8E93]" />
+            <button onClick={() => setShowMenu(!showMenu)} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
+              <MoreSquare set="broken" size={20} stroke="regular" />
             </button>
 
             {showMenu && (
@@ -142,7 +131,9 @@ export default function NoteEditor({ onClose }) {
                     onClick={() => { setShowMenu(false); setShowFolderPicker(true) }}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-white hover:bg-[#3A3A3C]"
                   >
-                    <FolderInput size={18} className="text-[#8E8E93]" />
+                    <div className="text-[#8E8E93]">
+                      <Folder set="broken" size={18} stroke="regular" />
+                    </div>
                     <span className="text-sm">Move to Folder</span>
                   </button>
                   <div className="h-px bg-[#3A3A3C] mx-2" />
@@ -158,7 +149,7 @@ export default function NoteEditor({ onClose }) {
                     onClick={handleDelete}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-[#FF453A] hover:bg-[#3A3A3C]"
                   >
-                    <Trash2 size={18} />
+                    <Delete set="broken" size={18} stroke="regular" />
                     <span className="text-sm">Delete</span>
                   </button>
                 </div>
@@ -199,7 +190,7 @@ export default function NoteEditor({ onClose }) {
             >
               {label.name}
               <button onClick={() => removeLabelFromNote(note.id, label.id)} className="hover:opacity-70">
-                <X size={14} />
+                <CloseSquare set="broken" size={14} stroke="regular" />
               </button>
             </span>
           ))}
@@ -238,8 +229,8 @@ function FolderPicker({ currentFolderId, folders, onSelect, onClose }) {
         <div className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#3A3A3C]">
             <h3 className="text-lg font-semibold text-white">Move to Folder</h3>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-[#3A3A3C]">
-              <X size={20} className="text-[#8E8E93]" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
+              <CloseSquare set="broken" size={20} stroke="regular" />
             </button>
           </div>
           
@@ -250,7 +241,7 @@ function FolderPicker({ currentFolderId, folders, onSelect, onClose }) {
             >
               <span className="text-2xl">📄</span>
               <span className="flex-1 text-left">No Folder</span>
-              {!currentFolderId && <Check size={20} className="text-[#0A84FF]" />}
+              {!currentFolderId && <TickSquare set="broken" size={20} stroke="regular" primaryColor="#0A84FF" />}
             </button>
             
             <div className="h-px bg-[#3A3A3C]" />
@@ -268,7 +259,7 @@ function FolderPicker({ currentFolderId, folders, onSelect, onClose }) {
                   {folder.icon || '📁'}
                 </div>
                 <span className="flex-1 text-left">{folder.name}</span>
-                {currentFolderId === folder.id && <Check size={20} className="text-[#0A84FF]" />}
+                {currentFolderId === folder.id && <TickSquare set="broken" size={20} stroke="regular" primaryColor="#0A84FF" />}
               </button>
             ))}
             

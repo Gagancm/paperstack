@@ -1,4 +1,4 @@
-import { Folder, Star, Trash2 } from 'lucide-react'
+import { Folder, Star, Delete } from 'react-iconly'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 export default function Sidebar() {
@@ -42,7 +42,7 @@ export default function Sidebar() {
               : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
           }`}
         >
-          <Folder size={18} />
+          <Folder set="broken" size={18} stroke="regular" />
           <span className="text-[15px]">Notes</span>
         </button>
 
@@ -57,7 +57,7 @@ export default function Sidebar() {
               : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
           }`}
         >
-          <Star size={18} />
+          <Star set="broken" size={18} stroke="regular" />
           <span className="text-[15px]">Favorites</span>
           {favoritesCount > 0 && (
             <span className="ml-auto text-xs text-[#8E8E93]">{favoritesCount}</span>
@@ -75,7 +75,7 @@ export default function Sidebar() {
               : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
           }`}
         >
-          <Trash2 size={18} />
+          <Delete set="broken" size={18} stroke="regular" />
           <span className="text-[15px]">Trash</span>
           {trashCount > 0 && (
             <span className="ml-auto text-xs text-[#8E8E93]">{trashCount}</span>
