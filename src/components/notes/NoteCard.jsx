@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Star, Folder, Delete } from 'react-iconly'
-import { Copy, X, Check, Upload, Tag } from 'lucide-react'
+import { Copy, X, Check, Upload, Plus, Tag } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 // Notebook color options using our existing color scheme
@@ -29,6 +29,8 @@ const COLOR_OPTIONS = [
   { id: 'gray', color: '#8E8E93' },
 ]
 
+const LABEL_COLOR_OPTIONS = Object.entries(LABEL_COLORS).map(([id, color]) => ({ id, color }))
+
 export default function NoteCard({ note, onClick, isSelected }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState(null)
@@ -47,7 +49,7 @@ export default function NoteCard({ note, onClick, isSelected }) {
       // Position menu to the right of the card
       setMenuPosition({ 
         top: Math.max(100, r.top - 100), 
-        left: Math.min(window.innerWidth - 280, r.right + 10)
+        left: Math.min(window.innerWidth - 340, r.right + 10)
       })
     }
     setMenuOpen(true)
@@ -194,15 +196,30 @@ function NoteEditMenu({
   addLabelToNote,
   removeLabelFromNote
 }) {
-  const [activeTab, setActiveTab] = useState('color') // 'color' or 'tag'
+  const [activeTab, setActiveTab] = useState('color') // 'color' or 'label'
   const [title, setTitle] = useState(note.title || '')
   const [selectedColor, setSelectedColor] = useState(note.colorKey || 'blue')
+  const [showNewLabelInput, setShowNewLabelInput] = useState(false)
+  const [newLabelName, setNewLabelName] = useState('')
+  const [newLabelColor, setNewLabelColor] = useState('blue')
   const inputRef = useRef(null)
+  const newLabelInputRef = useRef(null)
+  
+  const { createLabel } = useAppStore()
+  
+  const noteLabelIds = note.labels || []
 
   useEffect(() => {
     // Focus input when menu opens
     setTimeout(() => inputRef.current?.focus(), 100)
   }, [])
+
+  useEffect(() => {
+    // Focus new label input when it appears
+    if (showNewLabelInput) {
+      setTimeout(() => newLabelInputRef.current?.focus(), 100)
+    }
+  }, [showNewLabelInput])
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value)
@@ -214,12 +231,22 @@ function NoteEditMenu({
     updateNote(note.id, { colorKey: colorId })
   }
 
-  const handleToggleLabel = (labelId) => {
-    if (note.labels?.includes(labelId)) {
+  const handleLabelToggle = (labelId) => {
+    if (noteLabelIds.includes(labelId)) {
       removeLabelFromNote(note.id, labelId)
     } else {
       addLabelToNote(note.id, labelId)
     }
+  }
+
+  const handleCreateLabel = () => {
+    if (!newLabelName.trim()) return
+    const labelId = createLabel(newLabelName.trim(), newLabelColor)
+    addLabelToNote(note.id, labelId)
+    setNewLabelName('')
+    setNewLabelColor('blue')
+    setShowNewLabelInput(false)
+    addToast({ message: `Label "${newLabelName.trim()}" created` })
   }
 
   const handleMove = () => {
@@ -241,7 +268,7 @@ function NoteEditMenu({
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
       <div
-        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[260px] overflow-hidden border border-[#3A3A3C]"
+        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[320px] overflow-hidden border border-[#3A3A3C]"
         style={{ top: menuPosition.top, left: menuPosition.left }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -265,7 +292,7 @@ function NoteEditMenu({
           </div>
         </div>
 
-        {/* Color/Tag Tabs */}
+        {/* Color/Label Tabs */}
         <div className="px-3 pb-2">
           <div className="bg-[#1C1C1E] rounded-xl p-1 flex">
             <button
@@ -279,20 +306,20 @@ function NoteEditMenu({
               Color
             </button>
             <button
-              onClick={() => setActiveTab('tag')}
+              onClick={() => setActiveTab('label')}
               className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
-                activeTab === 'tag' 
+                activeTab === 'label' 
                   ? 'bg-[#3A3A3C] text-white' 
                   : 'text-[#8E8E93]'
               }`}
             >
-              Tag
+              Label
             </button>
           </div>
 
           {/* Color Options */}
           {activeTab === 'color' && (
-            <div className="flex items-center justify-center gap-2 mt-3 pb-1">
+            <div className="flex items-center justify-center gap-2.5 mt-3 pb-1">
               {COLOR_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
@@ -310,29 +337,114 @@ function NoteEditMenu({
             </div>
           )}
 
-          {/* Tag Options */}
-          {activeTab === 'tag' && (
-            <div className="flex items-center justify-center gap-2 mt-3 pb-1 flex-wrap">
-              {labels.length > 0 ? (
-                labels.map((label) => (
-                  <button
-                    key={label.id}
-                    onClick={() => handleToggleLabel(label.id)}
-                    className={`relative w-7 h-7 rounded-full transition-transform hover:scale-110 ${
-                      note.labels?.includes(label.id) ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1C1C1E]' : ''
-                    }`}
-                    style={{ backgroundColor: LABEL_COLORS[label.color] }}
-                    title={label.name}
-                  >
-                    {note.labels?.includes(label.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Check size={14} className="text-white" strokeWidth={3} />
+          {/* Label Options - Google Keep Style */}
+          {activeTab === 'label' && (
+            <div className="mt-3 pb-1">
+              {/* Existing Labels */}
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                {labels.length > 0 ? (
+                  labels.map((label, index) => (
+                    <button
+                      key={label.id}
+                      onClick={() => handleLabelToggle(label.id)}
+                      className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors ${
+                        index < labels.length - 1 ? 'border-b border-[#3A3A3C]' : ''
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <div 
+                        className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
+                          noteLabelIds.includes(label.id)
+                            ? 'bg-[#0A84FF] border-[#0A84FF]'
+                            : 'border-[#8E8E93]'
+                        }`}
+                      >
+                        {noteLabelIds.includes(label.id) && (
+                          <Check size={14} className="text-white" strokeWidth={3} />
+                        )}
                       </div>
-                    )}
-                  </button>
-                ))
+                      
+                      {/* Label color dot */}
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: LABEL_COLORS[label.color] }}
+                      />
+                      
+                      {/* Label name */}
+                      <span className="text-white text-[15px] flex-1 text-left">{label.name}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-4 text-center">
+                    <Tag size={24} className="text-[#8E8E93] mx-auto mb-2" />
+                    <p className="text-[#8E8E93] text-sm">No labels yet</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Create New Label */}
+              {!showNewLabelInput ? (
+                <button
+                  onClick={() => setShowNewLabelInput(true)}
+                  className="w-full mt-2 px-4 py-3 flex items-center gap-3 bg-[#1C1C1E] rounded-xl hover:bg-[#2A2A2C] transition-colors"
+                >
+                  <Plus size={20} className="text-[#0A84FF]" />
+                  <span className="text-[#0A84FF] text-[15px] font-medium">Create new label</span>
+                </button>
               ) : (
-                <p className="text-[#8E8E93] text-sm py-2">No tags created</p>
+                <div className="mt-2 bg-[#1C1C1E] rounded-xl p-3">
+                  {/* New label name input */}
+                  <input
+                    ref={newLabelInputRef}
+                    type="text"
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateLabel()
+                      if (e.key === 'Escape') setShowNewLabelInput(false)
+                    }}
+                    placeholder="Enter label name"
+                    className="w-full bg-[#2C2C2E] rounded-lg px-3 py-2.5 text-white text-[15px] outline-none placeholder-[#8E8E93] mb-3"
+                  />
+                  
+                  {/* Color picker for new label */}
+                  <div className="flex items-center gap-2 mb-3">
+                    {LABEL_COLOR_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setNewLabelColor(opt.id)}
+                        className="relative w-6 h-6 rounded-full transition-transform hover:scale-110"
+                        style={{ backgroundColor: opt.color }}
+                      >
+                        {newLabelColor === opt.id && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Check size={14} className="text-white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setShowNewLabelInput(false)
+                        setNewLabelName('')
+                      }}
+                      className="flex-1 py-2 rounded-lg bg-[#3A3A3C] text-white text-[15px] font-medium hover:bg-[#4A4A4C] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateLabel}
+                      disabled={!newLabelName.trim()}
+                      className="flex-1 py-2 rounded-lg bg-[#0A84FF] text-white text-[15px] font-medium hover:bg-[#0A84FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Create
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}

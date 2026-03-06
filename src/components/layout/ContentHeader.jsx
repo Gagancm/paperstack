@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { Filter, Plus, ChevronDown, Category, ChevronRight, Document, Folder, Edit, Scan, Image as ImageIcon, Camera } from 'react-iconly'
-import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen } from 'lucide-react'
-import { useAppStore } from '../../store/appStore'
+import { useState, useRef, useEffect } from 'react'
+import { Filter, Plus, ChevronDown, Category, ChevronRight, Document, Folder, Edit, Scan, Image as ImageIcon, Camera, Star, Delete } from 'react-iconly'
+import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen, ChevronLeft, Tag, Trash2, X } from 'lucide-react'
+import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 import NewNoteModal from '../ui/NewNoteModal'
 import NewFolderModal from '../ui/NewFolderModal'
+
+const LABEL_COLOR_OPTIONS = Object.entries(LABEL_COLORS).map(([id, color]) => ({ id, color }))
 
 export default function ContentHeader() {
   const [filterOpen, setFilterOpen] = useState(false)
@@ -13,12 +15,18 @@ export default function ContentHeader() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [showNewNoteModal, setShowNewNoteModal] = useState(false)
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
+  const [showNewLabelInput, setShowNewLabelInput] = useState(false)
+  const [newLabelName, setNewLabelName] = useState('')
+  const [newLabelColor, setNewLabelColor] = useState('blue')
+  const newLabelInputRef = useRef(null)
   
   const {
     activeFilter,
     setActiveFilter,
     labels,
     selectedFolderId,
+    folders,
+    clearSelectedFolder,
     viewMode,
     setViewMode,
     sortBy,
@@ -28,7 +36,23 @@ export default function ContentHeader() {
     createNote,
     selectNote,
     addToast,
+    createLabel,
+    notes,
+    getNotesCountByLabel,
   } = useAppStore()
+
+  const selectedFolder = folders.find(f => f.id === selectedFolderId)
+
+  // Calculate counts
+  const allNotesCount = notes.filter(n => !n.inTrash).length
+  const favoritesCount = notes.filter(n => !n.inTrash && n.pinned).length
+  const trashCount = notes.filter(n => n.inTrash).length
+
+  useEffect(() => {
+    if (showNewLabelInput) {
+      setTimeout(() => newLabelInputRef.current?.focus(), 100)
+    }
+  }, [showNewLabelInput])
 
   const getFilterLabel = () => {
     if (activeFilter === 'all') return 'All'
@@ -37,13 +61,6 @@ export default function ContentHeader() {
     const label = labels.find((l) => l.id === activeFilter)
     return label?.name || 'All'
   }
-
-  const filterOptions = [
-    { id: 'all', label: 'All' },
-    { id: 'favorites', label: 'Favorites' },
-    { id: 'trash', label: 'Trash' },
-    ...labels.map((l) => ({ id: l.id, label: l.name })),
-  ]
 
   const sortOptions = [
     { id: 'dateCreated', label: 'Date Created' },
@@ -93,79 +110,239 @@ export default function ContentHeader() {
     setNewMenuOpen(false)
   }
 
-  if (selectedFolderId) {
-    return (
-      <>
-        <NewNoteModal isOpen={showNewNoteModal} onClose={() => setShowNewNoteModal(false)} />
-        <NewFolderModal isOpen={showNewFolderModal} onClose={() => setShowNewFolderModal(false)} />
-      </>
-    )
+  const handleCreateLabel = () => {
+    if (!newLabelName.trim()) return
+    createLabel(newLabelName.trim(), newLabelColor)
+    addToast({ message: `Label "${newLabelName.trim()}" created` })
+    setNewLabelName('')
+    setNewLabelColor('blue')
+    setShowNewLabelInput(false)
+  }
+
+  const handleFilterSelect = (filterId) => {
+    setActiveFilter(filterId)
+    setFilterOpen(false)
   }
 
   return (
     <>
       <div className="bg-[#1C1C1E]">
-        {/* Title row */}
-        <div className="px-[30px] py-4">
-          <h1 className="text-2xl font-bold text-white">Notes</h1>
-        </div>
+        {/* Title row - only show when not in folder */}
+        {!selectedFolderId && (
+          <div className="px-[30px] py-4">
+            <h1 className="text-2xl font-bold text-white">Notes</h1>
+          </div>
+        )}
 
         {/* Controls row - aligns with sidebar nav items */}
-        <div className="flex items-center justify-between px-[30px] pb-4">
-          {/* Filter dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-lg hover:bg-[#3A3A3C] transition-colors"
-            >
-              <div className="text-[#8E8E93]">
-                <Filter set="broken" size={16} stroke="regular" />
-              </div>
-              <span className="text-white text-sm">{getFilterLabel()}</span>
-              <div className="text-[#8E8E93]">
-                <ChevronDown set="broken" size={14} stroke="regular" />
-              </div>
-            </button>
-            
-            {filterOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                <div className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[220px] overflow-hidden border border-[#3A3A3C]">
-                  
-                  {/* Header */}
-                  <div className="py-3 text-center border-b border-[#3A3A3C]">
-                    <h3 className="text-white font-semibold text-[15px]">Filter Notes</h3>
-                  </div>
+        <div className={`flex items-center px-[30px] ${selectedFolderId ? 'py-3' : 'pb-4'}`}>
+          {/* Left side - Filter dropdown */}
+          <div className="flex items-center flex-1">
+            <div className="relative">
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-lg hover:bg-[#3A3A3C] transition-colors"
+              >
+                <div className="text-[#8E8E93]">
+                  <Filter set="broken" size={16} stroke="regular" />
+                </div>
+                <span className="text-white text-sm">{getFilterLabel()}</span>
+                <div className="text-[#8E8E93]">
+                  <ChevronDown set="broken" size={14} stroke="regular" />
+                </div>
+              </button>
+              
+              {filterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                  <div className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
+                    
+                    {/* Header */}
+                    <div className="py-3 text-center border-b border-[#3A3A3C]">
+                      <h3 className="text-white font-semibold text-[15px]">Filter Notes</h3>
+                    </div>
 
-                  {/* Filter Options Card */}
-                  <div className="p-3">
-                    <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
-                      {filterOptions.map((opt, index) => (
+                    {/* Quick Filters Section */}
+                    <div className="p-3 pb-2">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Quick Filters
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        {/* All Notes */}
                         <button
-                          key={opt.id}
-                          onClick={() => {
-                            setActiveFilter(opt.id)
-                            setFilterOpen(false)
-                          }}
-                          className={`w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors ${
-                            index < filterOptions.length - 1 ? 'border-b border-[#3A3A3C]' : ''
-                          }`}
+                          onClick={() => handleFilterSelect('all')}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
-                          <span className="text-white text-[17px]">{opt.label}</span>
-                          {activeFilter === opt.id && (
-                            <Check size={20} className="text-[#0A84FF]" />
-                          )}
+                          <div className="flex items-center gap-3">
+                            <FileText size={20} className="text-[#8E8E93]" />
+                            <span className="text-white text-[15px]">All Notes</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#8E8E93] text-[13px]">{allNotesCount}</span>
+                            {activeFilter === 'all' && (
+                              <Check size={18} className="text-[#0A84FF]" />
+                            )}
+                          </div>
                         </button>
-                      ))}
+
+                        {/* Favorites */}
+                        <button
+                          onClick={() => handleFilterSelect('favorites')}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Star set="bold" size={20} primaryColor="#FFD60A" />
+                            <span className="text-white text-[15px]">Favorites</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#8E8E93] text-[13px]">{favoritesCount}</span>
+                            {activeFilter === 'favorites' && (
+                              <Check size={18} className="text-[#0A84FF]" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Trash */}
+                        <button
+                          onClick={() => handleFilterSelect('trash')}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Trash2 size={20} className="text-[#FF453A]" />
+                            <span className="text-white text-[15px]">Trash</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#8E8E93] text-[13px]">{trashCount}</span>
+                            {activeFilter === 'trash' && (
+                              <Check size={18} className="text-[#0A84FF]" />
+                            )}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Labels Section */}
+                    <div className="px-3 pb-3">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Labels
+                      </p>
+                      
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                        {labels.length > 0 ? (
+                          labels.map((label, index) => (
+                            <button
+                              key={label.id}
+                              onClick={() => handleFilterSelect(label.id)}
+                              className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors ${
+                                index < labels.length - 1 ? 'border-b border-[#3A3A3C]' : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="w-4 h-4 rounded-full"
+                                  style={{ backgroundColor: LABEL_COLORS[label.color] }}
+                                />
+                                <span className="text-white text-[15px]">{label.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[#8E8E93] text-[13px]">{getNotesCountByLabel(label.id)}</span>
+                                {activeFilter === label.id && (
+                                  <Check size={18} className="text-[#0A84FF]" />
+                                )}
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-4 text-center">
+                            <Tag size={24} className="text-[#8E8E93] mx-auto mb-2" />
+                            <p className="text-[#8E8E93] text-sm">No labels yet</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Create New Label */}
+                      {!showNewLabelInput ? (
+                        <button
+                          onClick={() => setShowNewLabelInput(true)}
+                          className="w-full mt-2 px-4 py-3 flex items-center gap-3 bg-[#1C1C1E] rounded-xl hover:bg-[#2A2A2C] transition-colors"
+                        >
+                          <Plus set="broken" size={20} stroke="regular" primaryColor="#0A84FF" />
+                          <span className="text-[#0A84FF] text-[15px] font-medium">Create new label</span>
+                        </button>
+                      ) : (
+                        <div className="mt-2 bg-[#1C1C1E] rounded-xl p-3">
+                          {/* New label name input */}
+                          <input
+                            ref={newLabelInputRef}
+                            type="text"
+                            value={newLabelName}
+                            onChange={(e) => setNewLabelName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleCreateLabel()
+                              if (e.key === 'Escape') {
+                                setShowNewLabelInput(false)
+                                setNewLabelName('')
+                              }
+                            }}
+                            placeholder="Enter label name"
+                            className="w-full bg-[#2C2C2E] rounded-lg px-3 py-2.5 text-white text-[15px] outline-none placeholder-[#8E8E93] mb-3"
+                          />
+                          
+                          {/* Color picker for new label */}
+                          <div className="flex items-center gap-2 mb-3">
+                            {LABEL_COLOR_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.id}
+                                onClick={() => setNewLabelColor(opt.id)}
+                                className="relative w-6 h-6 rounded-full transition-transform hover:scale-110"
+                                style={{ backgroundColor: opt.color }}
+                              >
+                                {newLabelColor === opt.id && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <Check size={14} className="text-white" strokeWidth={3} />
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                          
+                          {/* Action buttons */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setShowNewLabelInput(false)
+                                setNewLabelName('')
+                              }}
+                              className="flex-1 py-2 rounded-lg bg-[#3A3A3C] text-white text-[15px] font-medium hover:bg-[#4A4A4C] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleCreateLabel}
+                              disabled={!newLabelName.trim()}
+                              className="flex-1 py-2 rounded-lg bg-[#0A84FF] text-white text-[15px] font-medium hover:bg-[#0A84FF]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Create
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
+          {/* Center - Folder name (only when inside a folder) */}
+          {selectedFolder && (
+            <div className="flex-1 flex justify-center">
+              <span className="text-white font-semibold text-base">{selectedFolder.name}</span>
+            </div>
+          )}
+
           {/* Right controls */}
-          <div className="flex items-center gap-1">
+          <div className={`flex items-center gap-1 ${selectedFolder ? 'flex-1 justify-end' : ''}`}>
             {/* New button with expanded menu */}
             <div className="relative">
               <button
@@ -346,19 +523,7 @@ export default function ContentHeader() {
                   <div className="fixed inset-0 z-40" onClick={() => setViewMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 min-w-[200px] py-2 border border-[#3A3A3C] overflow-hidden">
                     
-                    {/* Select Items option */}
-                    <button
-                      onClick={() => {
-                        setViewMenuOpen(false)
-                      }}
-                      className="w-full px-4 py-3 flex items-center justify-between text-white hover:bg-[#3A3A3C] transition-colors"
-                    >
-                      <span className="text-[15px]">Select Items</span>
-                      <div className="w-5 h-5 rounded-full border-2 border-[#8E8E93]" />
-                    </button>
 
-                    {/* Divider */}
-                    <div className="h-px bg-[#3A3A3C] mx-3 my-1" />
 
                     {/* Grid View */}
                     <button
@@ -420,7 +585,7 @@ export default function ContentHeader() {
               )}
             </div>
 
-            {/* Cloud & Backup dropdown */}
+            {/* Google Drive Sync dropdown */}
             <div className="relative">
               <button 
                 onClick={() => setCloudMenuOpen(!cloudMenuOpen)}
@@ -435,16 +600,12 @@ export default function ContentHeader() {
                   <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[300px] overflow-hidden border border-[#3A3A3C]">
                     
                     {/* Header */}
-                    <div className="py-4 text-center">
-                      <h3 className="text-white font-semibold text-[17px]">Cloud & Backup Status</h3>
+                    <div className="py-3 text-center border-b border-[#3A3A3C]">
+                      <h3 className="text-white font-semibold text-[15px]">Google Drive Sync</h3>
                     </div>
 
-                    {/* Cloud Sync Section */}
-                    <div className="px-4 pb-4">
-                      <p className="text-[#8E8E93] text-[13px] uppercase tracking-wide mb-2">
-                        Cloud Sync
-                      </p>
-                      
+                    {/* Sync Status Section */}
+                    <div className="p-3">
                       <div className="bg-[#1C1C1E] rounded-xl px-4 py-3">
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 shrink-0">
@@ -461,9 +622,9 @@ export default function ContentHeader() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-[15px] font-medium leading-tight">
-                              {syncStatus === 'saved' ? 'Library synced with iCloud' : 
+                              {syncStatus === 'saved' ? 'Synced with Google Drive' : 
                                syncStatus === 'saving' ? 'Syncing...' :
-                               syncStatus === 'offline' ? 'Offline - Changes saved locally' :
+                               syncStatus === 'offline' ? 'Offline - Saved locally' :
                                'Sync error'}
                             </p>
                             <p className="text-[#8E8E93] text-[13px] mt-0.5">
@@ -483,16 +644,17 @@ export default function ContentHeader() {
                       </div>
                     </div>
 
-                    {/* Cloud & Backup Settings */}
-                    <div className="px-4 pb-4">
+                    {/* Sync Settings */}
+                    <div className="px-3 pb-3">
                       <button
                         onClick={() => {
+                          addToast({ message: 'Sync settings coming soon' })
                           setCloudMenuOpen(false)
                         }}
-                        className="w-full bg-[#1C1C1E] rounded-xl px-4 py-4 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
+                        className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
                       >
-                        <span className="text-white text-[17px]">Cloud & Backup Settings</span>
-                        <ChevronRight set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                        <span className="text-white text-[15px]">Sync Settings</span>
+                        <ChevronRight set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
                       </button>
                     </div>
                   </div>

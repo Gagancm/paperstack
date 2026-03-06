@@ -189,6 +189,7 @@ export const useAppStore = create(
           name,
           colorKey: 'blue',
           pinned: false,
+          labelIds: [], // Labels attached to folder
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
@@ -196,6 +197,26 @@ export const useAppStore = create(
           folders: [newFolder, ...state.folders],
         }))
         return newFolder.id
+      },
+
+      addLabelToFolder: (folderId, labelId) => {
+        set((state) => ({
+          folders: state.folders.map((folder) =>
+            folder.id === folderId && !(folder.labelIds || []).includes(labelId)
+              ? { ...folder, labelIds: [...(folder.labelIds || []), labelId], updatedAt: new Date().toISOString() }
+              : folder
+          ),
+        }))
+      },
+
+      removeLabelFromFolder: (folderId, labelId) => {
+        set((state) => ({
+          folders: state.folders.map((folder) =>
+            folder.id === folderId
+              ? { ...folder, labelIds: (folder.labelIds || []).filter((id) => id !== labelId), updatedAt: new Date().toISOString() }
+              : folder
+          ),
+        }))
       },
 
       updateFolder: (id, updates) => {
@@ -358,6 +379,34 @@ export const useAppStore = create(
         return state.notes.filter(
           (note) => !note.inTrash && note.folderId === folderId
         ).length
+      },
+
+      getFilteredFolders: () => {
+        const state = get()
+        let filtered = [...state.folders]
+        
+        // Sort folders
+        const sortBy = state.sortBy || 'lastModified'
+        filtered.sort((a, b) => {
+          // Pinned items always first
+          if (a.pinned && !b.pinned) return -1
+          if (!a.pinned && b.pinned) return 1
+          
+          // Then sort by preference
+          switch (sortBy) {
+            case 'name':
+              return (a.name || 'Untitled').localeCompare(b.name || 'Untitled')
+            case 'dateCreated':
+              return new Date(b.createdAt) - new Date(a.createdAt)
+            case 'type':
+              return 0
+            case 'lastModified':
+            default:
+              return new Date(b.updatedAt) - new Date(a.updatedAt)
+          }
+        })
+
+        return filtered
       },
 
       getSelectedNote: () => {

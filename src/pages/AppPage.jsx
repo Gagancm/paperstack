@@ -6,7 +6,7 @@ import ContentHeader from '../components/layout/ContentHeader'
 import NotesList from '../components/notes/NotesList'
 import NoteEditor from '../components/editor/NoteEditor'
 import Toast from '../components/ui/Toast'
-import { PanelLeft } from 'lucide-react'
+import { PanelLeft, ChevronLeft } from 'lucide-react'
 
 export default function AppPage() {
   const { 
@@ -14,6 +14,8 @@ export default function AppPage() {
     setSidebarOpen,
     toggleSidebar, 
     selectedNoteId,
+    selectedFolderId,
+    clearSelectedFolder,
     selectNote,
     toasts,
     removeToast,
@@ -35,13 +37,26 @@ export default function AppPage() {
 
   return (
     <div className="h-screen w-full bg-[#1C1C1E] text-white flex overflow-hidden">
-      {/* Fixed toggle button - always in same position, 30px from left */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed top-3 left-[30px] z-50 p-2 -ml-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
-      >
-        <PanelLeft size={20} className="text-[#8E8E93]" />
-      </button>
+      {/* Fixed toggle button and back button - always in same position, 30px from left */}
+      <div className="fixed top-3 left-[30px] z-50 flex items-center gap-1">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 -ml-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
+        >
+          <PanelLeft size={20} className="text-[#8E8E93]" />
+        </button>
+        
+        {/* Back to All Notes button - only show when inside a folder */}
+        {selectedFolderId && (
+          <button
+            onClick={clearSelectedFolder}
+            className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#0A84FF]"
+          >
+            <ChevronLeft size={18} />
+            <span className="text-sm font-medium">All Notes</span>
+          </button>
+        )}
+      </div>
 
       {/* Sidebar - always in the document flow when open */}
       <Sidebar />
