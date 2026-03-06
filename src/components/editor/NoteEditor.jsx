@@ -1,14 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import { Edit, MoreSquare, Star, Folder, Delete, CloseSquare, ChevronLeft, TickSquare } from 'react-iconly'
-import { Tag, Copy } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { ChevronLeft, Star, Folder, Delete, CloseSquare, TickSquare, MoreSquare } from 'react-iconly'
+import { Tag, Copy, Settings } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
-import GoodNotesCanvas from './GoodNotesCanvas'
 import LabelPicker from '../labels/LabelPicker'
+import UnifiedCanvas from './UnifiedCanvas'
 
 export default function NoteEditor({ onClose }) {
   const {
@@ -17,8 +12,6 @@ export default function NoteEditor({ onClose }) {
     togglePinNote,
     deleteNote,
     duplicateNote,
-    editorMode,
-    setEditorMode,
     selectNote,
     labels,
     folders,
@@ -29,26 +22,9 @@ export default function NoteEditor({ onClose }) {
   const [showMenu, setShowMenu] = useState(false)
   const [showLabelPicker, setShowLabelPicker] = useState(false)
   const [showFolderPicker, setShowFolderPicker] = useState(false)
+  const [showPageSettings, setShowPageSettings] = useState(false)
 
   const note = getSelectedNote()
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-      Placeholder.configure({ placeholder: 'Start typing...' }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-    ],
-    content: note?.content || '',
-    onUpdate: ({ editor }) => {
-      if (note) updateNote(note.id, { content: editor.getHTML() })
-    },
-    editorProps: {
-      attributes: {
-        class: 'tiptap-editor prose prose-invert max-w-none focus:outline-none min-h-full px-6 py-4',
-      },
-    },
-  }, [note?.id])
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -63,7 +39,6 @@ export default function NoteEditor({ onClose }) {
   const noteLabels = note.labels.map((id) => labels.find((l) => l.id === id)).filter(Boolean)
   const currentFolder = folders.find(f => f.id === note.folderId)
 
-  const handleTitleChange = (e) => updateNote(note.id, { title: e.target.value })
   const handleClose = () => { selectNote(null); onClose() }
   const handleDelete = () => { deleteNote(note.id); setShowMenu(false); onClose() }
 
@@ -76,62 +51,73 @@ export default function NoteEditor({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-[#1C1C1E] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 px-4 py-3 bg-[#1C1C1E] border-b border-[#3A3A3C]">
-        <button onClick={handleClose} className="flex items-center gap-1 text-[#0A84FF]">
-          <ChevronLeft set="broken" size={24} stroke="regular" />
-          <span className="font-medium">Notes</span>
-        </button>
-
-        {/* Mode Toggle - Simplified */}
-        <div className="flex items-center bg-[#2C2C2E] rounded-lg p-1">
-          <button
-            onClick={() => setEditorMode('type')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              editorMode === 'type' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
-            }`}
-          >
-            Text
-          </button>
-          <button
-            onClick={() => setEditorMode('draw')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              editorMode === 'draw' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
-            }`}
-          >
-            Canvas
+      {/* Header - matches home/folder design */}
+      <div className="flex items-center px-3 h-11 bg-[#2C2C2E] border-b border-[#3A3A3C]">
+        {/* Left: Back button */}
+        <div className="flex items-center min-w-[80px]">
+          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#0A84FF]">
+            <ChevronLeft set="broken" size={18} stroke="regular" />
           </button>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1">
+        {/* Center: Folder / Note Title */}
+        <div className="flex-1 flex justify-center items-center gap-1.5">
+          {currentFolder && (
+            <>
+              <span className="text-[15px] text-[#8E8E93]">{currentFolder.name}</span>
+              <span className="text-[15px] text-[#8E8E93]">/</span>
+            </>
+          )}
+          <input
+            type="text"
+            value={note.title}
+            onChange={(e) => updateNote(note.id, { title: e.target.value })}
+            placeholder="Untitled"
+            className="text-[15px] font-medium text-white bg-transparent border-none outline-none placeholder-[#8E8E93] text-center max-w-[200px]"
+            maxLength={60}
+          />
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-0.5 min-w-[80px] justify-end">
           <button
             onClick={() => togglePinNote(note.id)}
-            className={`p-2 rounded-lg hover:bg-[#3A3A3C] ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
+            className={`p-1.5 rounded-lg hover:bg-[#3A3A3C] ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
           >
-            <Star set={note.pinned ? 'bold' : 'broken'} size={20} stroke="regular" />
+            <Star set={note.pinned ? 'bold' : 'broken'} size={18} stroke="regular" />
           </button>
           
-          <button onClick={() => setShowLabelPicker(!showLabelPicker)} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
-            <Tag size={20} />
+          <button 
+            onClick={() => setShowLabelPicker(!showLabelPicker)} 
+            className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]"
+          >
+            <Tag size={18} />
+          </button>
+
+          <button 
+            onClick={() => setShowPageSettings(!showPageSettings)} 
+            className={`p-1.5 rounded-lg hover:bg-[#3A3A3C] ${showPageSettings ? 'text-[#0A84FF]' : 'text-[#8E8E93]'}`}
+          >
+            <Settings size={18} />
           </button>
 
           <div className="relative">
-            <button onClick={() => setShowMenu(!showMenu)} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
-              <MoreSquare set="broken" size={20} stroke="regular" />
+            <button 
+              onClick={() => setShowMenu(!showMenu)} 
+              className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]"
+            >
+              <MoreSquare set="broken" size={18} stroke="regular" />
             </button>
 
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-lg shadow-xl z-50 w-52 py-1 border border-[#3A3A3C]">
+                <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-xl shadow-xl z-50 w-52 py-1 border border-[#3A3A3C]">
                   <button
                     onClick={() => { setShowMenu(false); setShowFolderPicker(true) }}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-white hover:bg-[#3A3A3C]"
                   >
-                    <div className="text-[#8E8E93]">
-                      <Folder set="broken" size={18} stroke="regular" />
-                    </div>
+                    <Folder set="broken" size={18} stroke="regular" className="text-[#8E8E93]" />
                     <span className="text-sm">Move to Folder</span>
                   </button>
                   <div className="h-px bg-[#3A3A3C] mx-2" />
@@ -172,53 +158,12 @@ export default function NoteEditor({ onClose }) {
         />
       )}
 
-      {/* Labels */}
-      {(noteLabels.length > 0 || currentFolder) && editorMode === 'type' && (
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-[#3A3A3C] overflow-x-auto">
-          {currentFolder && (
-            <span className="bg-[#3A3A3C] px-3 py-1 rounded-full text-sm text-white flex items-center gap-2 shrink-0">
-              📁 {currentFolder.name}
-            </span>
-          )}
-          {noteLabels.map((label) => (
-            <span
-              key={label.id}
-              className="px-3 py-1 rounded-full text-sm flex items-center gap-2 shrink-0"
-              style={{ backgroundColor: `${LABEL_COLORS[label.color]}30`, color: LABEL_COLORS[label.color] }}
-            >
-              {label.name}
-              <button onClick={() => removeLabelFromNote(note.id, label.id)} className="hover:opacity-70">
-                <CloseSquare set="broken" size={14} stroke="regular" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Title - Only show for text mode */}
-      {editorMode === 'type' && (
-        <div className="px-6 pt-6 pb-2">
-          <input
-            type="text"
-            value={note.title}
-            onChange={handleTitleChange}
-            placeholder="Untitled"
-            className="w-full text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-[#8E8E93]"
-            maxLength={120}
-          />
-        </div>
-      )}
-
-      {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        {editorMode === 'type' ? (
-          <div className="h-full overflow-y-auto">
-            <EditorContent editor={editor} className="h-full" />
-          </div>
-        ) : (
-          <GoodNotesCanvas noteId={note.id} />
-        )}
-      </div>
+      {/* Unified Canvas - Main Editor */}
+      <UnifiedCanvas 
+        noteId={note.id} 
+        showPageSettings={showPageSettings}
+        onClosePageSettings={() => setShowPageSettings(false)}
+      />
     </div>
   )
 }

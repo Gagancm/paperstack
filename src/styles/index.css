@@ -159,3 +159,53 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: none;
 }
+
+/* Unified Canvas */
+.unified-canvas {
+  touch-action: none;
+}
+
+/* Tool button active animation */
+.tool-btn-active {
+  animation: tool-pulse 0.2s ease-out;
+}
+
+@keyframes tool-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Pen preset hover */
+.pen-preset:hover {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  transition: all 0.15s ease-out;
+}
+
+/* Canvas paper shadow */
+.paper-shadow {
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* iOS-style segmented control */
+.segmented-control {
+  background: #1C1C1E;
+  border-radius: 10px;
+  padding: 2px;
+}
+
+.segmented-control button {
+  transition: all 0.2s ease;
+}
+
+.segmented-control button.active {
+  background: #3A3A3C;
+  border-radius: 8px;
+}
