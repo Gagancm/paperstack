@@ -1,10 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { 
   Hand, Pen, Pencil, Highlighter, Eraser, Type, Image, 
   Shapes, Lasso, Undo2, Redo2, Plus, Minus, 
-  ChevronDown, X, Search, Mic,
+  ChevronDown, X, Mic,
   Circle, Square, Triangle, Minus as LineIcon, ArrowRight,
-  RotateCcw, MoreHorizontal, Share2, Copy as CopyIcon
+  Share2, Copy as CopyIcon
 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 
@@ -38,28 +38,6 @@ const COLORS = {
   pastel: ['#FFB5B5', '#FFD9B5', '#FFF4B5', '#B5FFB5', '#B5E8FF', '#D5B5FF']
 }
 
-// Paper templates
-const PAPER_TEMPLATES = [
-  { id: 'blank', name: 'Blank' },
-  { id: 'dotted', name: 'Dotted' },
-  { id: 'grid', name: 'Grid' },
-  { id: 'lined', name: 'Lined' },
-  { id: 'lined-margin', name: 'Margin' },
-  { id: 'cornell', name: 'Cornell' },
-]
-
-// Paper colors
-const PAPER_COLORS = [
-  { name: 'White', hex: '#FFFFFF' },
-  { name: 'Cream', hex: '#FFF8E7' },
-  { name: 'Yellow', hex: '#FFFDE7' },
-  { name: 'Green', hex: '#E8F5E9' },
-  { name: 'Blue', hex: '#E3F2FD' },
-  { name: 'Dark', hex: '#2C2C2E' },
-  { name: 'Sepia', hex: '#F5E6D3' },
-  { name: 'Rose', hex: '#FCE4EC' },
-]
-
 // Shape types
 const SHAPE_TYPES = [
   { id: 'rectangle', icon: Square },
@@ -71,7 +49,7 @@ const SHAPE_TYPES = [
 
 // ============= MAIN COMPONENT =============
 
-export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSettings }) {
+const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate, paperColor }, ref) {
   const canvasRef = useRef(null)
   const patternCanvasRef = useRef(null)
   const contextRef = useRef(null)
@@ -100,9 +78,29 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
 
   const { updateNote, getSelectedNote } = useAppStore()
   const note = getSelectedNote()
-  
-  const [paperColor, setPaperColor] = useState(note?.paperColor || '#FFFFFF')
-  const [paperTemplate, setPaperTemplate] = useState(note?.paperTemplate || 'lined')
+
+  // Expose clearCanvas to parent via ref
+  const clearCanvas = useCallback(() => {
+    const canvas = canvasRef.current
+    const ctx = contextRef.current
+    const container = containerRef.current
+    if (!canvas || !ctx || !container) return
+    
+    // Save to undo stack before clearing
+    setUndoStack((prev) => [...prev.slice(-49), canvas.toDataURL()])
+    setRedoStack([])
+    
+    const rect = container.getBoundingClientRect()
+    ctx.clearRect(0, 0, rect.width, rect.height)
+    
+    if (noteId) {
+      updateNote(noteId, { drawingData: canvas.toDataURL('image/png'), hasDrawing: false })
+    }
+  }, [noteId, updateNote])
+
+  useImperativeHandle(ref, () => ({
+    clearCanvas
+  }), [clearCanvas])
 
   // ============= PAPER DRAWING =============
   
@@ -419,17 +417,6 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
     img.src = nextState
   }
 
-  const clearCanvas = () => {
-    const canvas = canvasRef.current
-    const ctx = contextRef.current
-    const container = containerRef.current
-    const rect = container.getBoundingClientRect()
-
-    saveToUndoStack()
-    ctx.clearRect(0, 0, rect.width, rect.height)
-    saveDrawing()
-  }
-
   const handleToolSelect = (toolId) => {
     setActiveTool(toolId)
     if (['pen', 'pencil', 'highlighter', 'eraser', 'shapes'].includes(toolId)) {
@@ -455,9 +442,9 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[#1C1C1E]">
       {/* Top Toolbar - Compact like GoodNotes */}
-      <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-11 flex items-center px-2">
+      <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-11 flex items-center px-3">
         {/* Left Section: Undo/Redo */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 min-w-[80px]">
           <button
             onClick={handleUndo}
             disabled={undoStack.length <= 1}
@@ -497,7 +484,7 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
         </div>
 
         {/* Right Section: Actions */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 min-w-[80px] justify-end">
           <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="Add Page">
             <Plus size={18} />
           </button>
@@ -506,9 +493,6 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
           </button>
           <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="Duplicate">
             <CopyIcon size={18} />
-          </button>
-          <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="More">
-            <MoreHorizontal size={18} />
           </button>
         </div>
       </div>
@@ -606,37 +590,56 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
 
       {/* Color Picker Dropdown */}
       {showColorPicker && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 bg-[#2C2C2E] rounded-2xl p-4 shadow-2xl border border-[#3A3A3C]">
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              {COLORS.basic.map(color => (
-                <button
-                  key={color}
-                  onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                  className={`w-8 h-8 rounded-full ${activeColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2C2C2E]' : ''}`}
-                  style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #636366' : 'none' }}
-                />
-              ))}
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] overflow-hidden w-56">
+          {/* Header */}
+          <div className="py-2 text-center border-b border-[#3A3A3C]">
+            <span className="text-white font-medium text-[15px]">Color</span>
+          </div>
+          
+          <div className="p-1.5">
+            {/* Basic Colors */}
+            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Basic</p>
+            <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+              <div className="flex gap-2 justify-center">
+                {COLORS.basic.map(color => (
+                  <button
+                    key={color}
+                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                    style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #636366' : 'none' }}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2 flex-wrap max-w-[200px]">
-              {COLORS.vivid.map(color => (
-                <button
-                  key={color}
-                  onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                  className={`w-8 h-8 rounded-full ${activeColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2C2C2E]' : ''}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+            
+            {/* Vivid Colors */}
+            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Vivid</p>
+            <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+              <div className="flex gap-2 flex-wrap justify-center">
+                {COLORS.vivid.map(color => (
+                  <button
+                    key={color}
+                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {COLORS.pastel.map(color => (
-                <button
-                  key={color}
-                  onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                  className={`w-8 h-8 rounded-full ${activeColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2C2C2E]' : ''}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+            
+            {/* Pastel Colors */}
+            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Pastel</p>
+            <div className="bg-[#1C1C1E] rounded-lg p-2.5">
+              <div className="flex gap-2 justify-center">
+                {COLORS.pastel.map(color => (
+                  <button
+                    key={color}
+                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -670,68 +673,8 @@ export default function UnifiedCanvas({ noteId, showPageSettings, onClosePageSet
         </span>
       </div>
 
-      {/* Page Settings Modal */}
-      {showPageSettings && (
-        <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={onClosePageSettings} />
-          <div className="fixed right-4 top-20 z-50 w-72 bg-[#2C2C2E] rounded-2xl shadow-2xl border border-[#3A3A3C] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#3A3A3C]">
-              <h3 className="text-white font-semibold">Page Settings</h3>
-              <button onClick={onClosePageSettings} className="p-1 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="text-xs text-[#8E8E93] uppercase tracking-wide">Template</label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  {PAPER_TEMPLATES.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => setPaperTemplate(template.id)}
-                      className={`px-2 py-2 rounded-lg text-xs transition-colors ${
-                        paperTemplate === template.id
-                          ? 'bg-[#0A84FF] text-white'
-                          : 'bg-[#3A3A3C] text-[#8E8E93] hover:bg-[#48484A]'
-                      }`}
-                    >
-                      {template.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-[#8E8E93] uppercase tracking-wide">Paper Color</label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {PAPER_COLORS.map((color) => (
-                    <button
-                      key={color.hex}
-                      onClick={() => setPaperColor(color.hex)}
-                      className={`w-8 h-8 rounded-lg transition-transform ${
-                        paperColor === color.hex ? 'ring-2 ring-[#0A84FF] scale-110' : ''
-                      }`}
-                      style={{ backgroundColor: color.hex, border: '1px solid #3A3A3C' }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-[#3A3A3C]">
-                <button
-                  onClick={clearCanvas}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm bg-[#FF453A]/20 text-[#FF453A] hover:bg-[#FF453A]/30 flex items-center justify-center gap-2"
-                >
-                  <RotateCcw size={16} />
-                  <span>Clear This Page</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
-}
+})
+
+export default UnifiedCanvas

@@ -32,80 +32,74 @@ export default function NewFolderModal({ isOpen, onClose }) {
       <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
       
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto max-h-[85vh] overflow-y-auto">
+        <div className="bg-[#2C2C2E] w-full max-w-sm rounded-xl pointer-events-auto max-h-[85vh] overflow-y-auto border border-[#3A3A3C]">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#3A3A3C]">
-            <button onClick={onClose} className="text-[#0A84FF] font-medium">Cancel</button>
-            <h2 className="text-lg font-semibold text-white">New Folder</h2>
-            <button onClick={handleCreate} className="text-[#0A84FF] font-semibold">Create</button>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#3A3A3C]">
+            <button onClick={onClose} className="text-[#0A84FF] text-[15px]">Cancel</button>
+            <span className="text-white font-medium text-[15px]">New Folder</span>
+            <button onClick={handleCreate} className="text-[#0A84FF] font-medium text-[15px]">Create</button>
           </div>
 
-          {/* Content */}
-          <div className="p-5">
-            {/* Preview - square macOS folder */}
-            <div className="flex justify-center mb-6">
-              <div className="relative w-[80px] h-[68px]">
-                {/* Shadow */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-[5px] rounded-[50%] bg-black/25 blur-[2px]" />
-                
-                {/* Back of folder */}
+          {/* Preview */}
+          <div className="flex justify-center py-5 border-b border-[#3A3A3C]">
+            <div className="relative w-[80px] h-[68px]">
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-[5px] rounded-[50%] bg-black/25 blur-[2px]" />
+              <div 
+                className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-[95%] h-[52px] rounded-md"
+                style={{ backgroundColor: colors.dark }}
+              />
+              <div 
+                className="absolute top-0 left-[5px] w-[38%] h-[11px] rounded-t-md"
+                style={{ backgroundColor: colors.main }}
+              />
+              <div 
+                className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-[95%] h-[46px] rounded-md"
+                style={{ 
+                  background: `linear-gradient(180deg, ${colors.light} 0%, ${colors.main} 100%)`,
+                }}
+              >
                 <div 
-                  className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-[95%] h-[52px] rounded-md"
-                  style={{ backgroundColor: colors.dark }}
+                  className="absolute top-0 left-0 right-0 h-[2px] rounded-t-md"
+                  style={{ backgroundColor: colors.light, opacity: 0.8 }}
                 />
-                
-                {/* Folder tab */}
-                <div 
-                  className="absolute top-0 left-[5px] w-[38%] h-[11px] rounded-t-md"
-                  style={{ backgroundColor: colors.main }}
-                />
-                
-                {/* Front of folder */}
-                <div 
-                  className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-[95%] h-[46px] rounded-md"
-                  style={{ 
-                    background: `linear-gradient(180deg, ${colors.light} 0%, ${colors.main} 100%)`,
-                  }}
-                >
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-[2px] rounded-t-md"
-                    style={{ backgroundColor: colors.light, opacity: 0.8 }}
-                  />
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* Name */}
-            <div className="mb-5">
-              <label className="text-[#8E8E93] text-xs uppercase tracking-wide mb-2 block">Folder Name</label>
+          {/* Name Input */}
+          <div className="p-1.5">
+            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Folder Name</p>
+            <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="New Folder"
-                className="w-full bg-[#1C1C1E] text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-[#0A84FF]"
+                className="w-full bg-transparent text-white text-[15px] px-3 py-2.5 outline-none"
                 autoFocus
               />
             </div>
+          </div>
 
-            {/* Color */}
-            <div>
-              <label className="text-[#8E8E93] text-xs uppercase tracking-wide mb-3 block">Folder Color</label>
-              <div className="flex flex-wrap gap-3">
+          {/* Color Selection */}
+          <div className="px-1.5 pb-1.5">
+            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Folder Color</p>
+            <div className="bg-[#1C1C1E] rounded-lg p-3">
+              <div className="flex flex-wrap gap-2.5">
                 {COLOR_OPTIONS.map((colorKey) => {
                   const color = FOLDER_COLORS[colorKey]
                   return (
                     <button
                       key={colorKey}
                       onClick={() => setSelectedColor(colorKey)}
-                      className={`w-10 h-10 rounded-full transition-all ${
-                        selectedColor === colorKey ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2C2C2E] scale-110' : ''
+                      className={`w-9 h-9 rounded-full transition-all ${
+                        selectedColor === colorKey ? 'ring-2 ring-[#0A84FF] scale-110' : ''
                       }`}
                       style={{ backgroundColor: color.main }}
                     >
                       {selectedColor === colorKey && (
                         <div className="w-full h-full flex items-center justify-center text-white">
-                          <TickSquare set="bold" size={18} />
+                          <TickSquare set="bold" size={16} />
                         </div>
                       )}
                     </button>

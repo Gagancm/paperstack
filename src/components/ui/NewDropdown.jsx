@@ -48,32 +48,36 @@ export default function NewDropdown({ onNewNote, onNewFolder }) {
 
       {isOpen && (
         <>
-          {/* Backdrop for mobile */}
-          <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsOpen(false)} />
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           
           {/* Dropdown Menu */}
-          <div className="dropdown-menu absolute right-0 top-full mt-2 w-48 z-50 overflow-hidden py-1.5 animate-fade-in">
-            <button
-              onClick={handleNewNote}
-              className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
-            >
-              <div className="text-text-secondary shrink-0">
-                <Paper set="broken" size={18} stroke="regular" />
+          <div className="absolute right-0 top-full mt-1 w-48 z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] overflow-hidden">
+            {/* Header */}
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Create New</span>
+            </div>
+
+            {/* Options */}
+            <div className="p-1.5">
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button
+                  onClick={handleNewNote}
+                  className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                >
+                  <Paper set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                  <span className="text-[15px]">New Note</span>
+                </button>
+                
+                <button
+                  onClick={handleNewFolder}
+                  className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C]"
+                >
+                  <Folder set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                  <span className="text-[15px]">New Folder</span>
+                </button>
               </div>
-              <span className="text-text-primary text-sm">New Note</span>
-            </button>
-            
-            <div className="dropdown-divider" />
-            
-            <button
-              onClick={handleNewFolder}
-              className="dropdown-item w-full px-4 py-3 flex items-center gap-3 text-left"
-            >
-              <div className="text-text-secondary shrink-0">
-                <Folder set="broken" size={18} stroke="regular" />
-              </div>
-              <span className="text-text-primary text-sm">New Folder</span>
-            </button>
+            </div>
           </div>
         </>
       )}
