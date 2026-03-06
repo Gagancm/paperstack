@@ -5,9 +5,9 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { Edit, MoreSquare, Star, Folder, Delete, CloseSquare, ChevronLeft, TickSquare } from 'react-iconly'
-import { Type, Tag, Copy } from 'lucide-react' // These icons not available in Iconly
+import { Tag, Copy } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
-import DrawCanvas from './DrawCanvas'
+import GoodNotesCanvas from './GoodNotesCanvas'
 import LabelPicker from '../labels/LabelPicker'
 
 export default function NoteEditor({ onClose }) {
@@ -83,25 +83,23 @@ export default function NoteEditor({ onClose }) {
           <span className="font-medium">Notes</span>
         </button>
 
-        {/* Mode Toggle */}
+        {/* Mode Toggle - Simplified */}
         <div className="flex items-center bg-[#2C2C2E] rounded-lg p-1">
           <button
             onClick={() => setEditorMode('type')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-colors ${
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               editorMode === 'type' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
             }`}
           >
-            <Type size={16} />
-            <span>Type</span>
+            Text
           </button>
           <button
             onClick={() => setEditorMode('draw')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-colors ${
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               editorMode === 'draw' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
             }`}
           >
-            <Edit set="broken" size={16} stroke="regular" />
-            <span>Draw</span>
+            Canvas
           </button>
         </div>
 
@@ -175,7 +173,7 @@ export default function NoteEditor({ onClose }) {
       )}
 
       {/* Labels */}
-      {(noteLabels.length > 0 || currentFolder) && (
+      {(noteLabels.length > 0 || currentFolder) && editorMode === 'type' && (
         <div className="flex items-center gap-2 px-6 py-3 border-b border-[#3A3A3C] overflow-x-auto">
           {currentFolder && (
             <span className="bg-[#3A3A3C] px-3 py-1 rounded-full text-sm text-white flex items-center gap-2 shrink-0">
@@ -197,24 +195,28 @@ export default function NoteEditor({ onClose }) {
         </div>
       )}
 
-      {/* Title */}
-      <div className="px-6 pt-6 pb-2">
-        <input
-          type="text"
-          value={note.title}
-          onChange={handleTitleChange}
-          placeholder="Untitled"
-          className="w-full text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-[#8E8E93]"
-          maxLength={120}
-        />
-      </div>
+      {/* Title - Only show for text mode */}
+      {editorMode === 'type' && (
+        <div className="px-6 pt-6 pb-2">
+          <input
+            type="text"
+            value={note.title}
+            onChange={handleTitleChange}
+            placeholder="Untitled"
+            className="w-full text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-[#8E8E93]"
+            maxLength={120}
+          />
+        </div>
+      )}
 
       {/* Editor */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-hidden">
         {editorMode === 'type' ? (
-          <EditorContent editor={editor} className="h-full" />
+          <div className="h-full overflow-y-auto">
+            <EditorContent editor={editor} className="h-full" />
+          </div>
         ) : (
-          <DrawCanvas noteId={note.id} />
+          <GoodNotesCanvas noteId={note.id} />
         )}
       </div>
     </div>

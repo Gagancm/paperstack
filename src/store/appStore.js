@@ -339,14 +339,27 @@ export const useAppStore = create(
           }
         }
 
-        // Filter by search query
+        // Filter by search query - search in title, content, and labels
         if (state.searchQuery) {
           const query = state.searchQuery.toLowerCase()
-          filtered = filtered.filter(
-            (note) =>
-              note.title.toLowerCase().includes(query) ||
-              note.content.toLowerCase().includes(query)
-          )
+          filtered = filtered.filter((note) => {
+            // Search in title
+            if (note.title?.toLowerCase().includes(query)) return true
+            
+            // Search in content (strip HTML tags for better matching)
+            const plainContent = note.content?.replace(/<[^>]*>/g, '') || ''
+            if (plainContent.toLowerCase().includes(query)) return true
+            
+            // Search in label names
+            const noteLabels = note.labels || []
+            const matchingLabel = noteLabels.some(labelId => {
+              const label = state.labels.find(l => l.id === labelId)
+              return label?.name?.toLowerCase().includes(query)
+            })
+            if (matchingLabel) return true
+            
+            return false
+          })
         }
 
         // Sort: pinned first, then by sortBy preference
@@ -384,6 +397,25 @@ export const useAppStore = create(
       getFilteredFolders: () => {
         const state = get()
         let filtered = [...state.folders]
+        
+        // Filter by search query - search in folder name and labels
+        if (state.searchQuery) {
+          const query = state.searchQuery.toLowerCase()
+          filtered = filtered.filter((folder) => {
+            // Search in folder name
+            if (folder.name?.toLowerCase().includes(query)) return true
+            
+            // Search in label names attached to folder
+            const folderLabels = folder.labelIds || []
+            const matchingLabel = folderLabels.some(labelId => {
+              const label = state.labels.find(l => l.id === labelId)
+              return label?.name?.toLowerCase().includes(query)
+            })
+            if (matchingLabel) return true
+            
+            return false
+          })
+        }
         
         // Sort folders
         const sortBy = state.sortBy || 'lastModified'
