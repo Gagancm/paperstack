@@ -2,26 +2,29 @@ import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHand
 import { 
   Hand, Pen, Pencil, Highlighter, Eraser, Type, Image, 
   Shapes, Lasso, Undo2, Redo2, Plus, Minus, 
-  ChevronDown, X, Mic,
-  Circle, Square, Triangle, Minus as LineIcon, ArrowRight,
-  Share2, Copy as CopyIcon
+  ChevronDown, X, Mic, Search, Clock, Ruler, ZoomIn,
+  Circle, Square, Triangle, Minus as LineIcon, ArrowRight, Diamond,
+  Share2, Copy as CopyIcon, PanelLeft, FileText,
+  Camera, Smile, Upload, Printer, Monitor, Layout, Download,
+  Bold, Italic, AlignLeft, AlignCenter, AlignRight, Pin,
+  ScanLine, ImagePlus, FolderOpen, Link2, MessageSquare,
+  Bookmark, Check, Settings, RotateCcw
 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 
 // ============= CONFIGURATIONS =============
 
 // Tool definitions - matches GoodNotes toolbar order
-const TOOLS = [
-  { id: 'hand', name: 'Hand', icon: Hand },
+const MAIN_TOOLS = [
   { id: 'lasso', name: 'Lasso', icon: Lasso },
   { id: 'pen', name: 'Pen', icon: Pen },
-  { id: 'pencil', name: 'Pencil', icon: Pencil },
-  { id: 'highlighter', name: 'Highlighter', icon: Highlighter },
   { id: 'eraser', name: 'Eraser', icon: Eraser },
   { id: 'text', name: 'Text', icon: Type },
-  { id: 'shapes', name: 'Shapes', icon: Shapes },
+  { id: 'elements', name: 'Elements', icon: Smile },
   { id: 'image', name: 'Image', icon: Image },
-  { id: 'mic', name: 'Audio', icon: Mic },
+  { id: 'shapes', name: 'Shapes', icon: Shapes },
+  { id: 'comment', name: 'Comment', icon: MessageSquare },
+  { id: 'link', name: 'Link', icon: Link2 },
 ]
 
 // Writing tool settings
@@ -40,20 +43,38 @@ const COLORS = {
 
 // Shape types
 const SHAPE_TYPES = [
+  { id: 'freeform', icon: Lasso },
+  { id: 'connector1', icon: ArrowRight },
+  { id: 'connector2', icon: Share2 },
   { id: 'rectangle', icon: Square },
   { id: 'circle', icon: Circle },
   { id: 'triangle', icon: Triangle },
+  { id: 'diamond', icon: Diamond },
   { id: 'line', icon: LineIcon },
-  { id: 'arrow', icon: ArrowRight },
 ]
+
+// Pen stroke sizes
+const PEN_STROKE_SIZES = [
+  { id: 'thin', width: 1 },
+  { id: 'medium', width: 2 },
+  { id: 'thick', width: 4 },
+]
+
+// Pen colors for quick access
+const PEN_QUICK_COLORS = ['#FF3B30', '#007AFF', '#000000']
+
+// Font options
+const FONTS = ['Modern', 'Classic', 'Handwritten', 'Mono']
+const FONT_SIZES = [12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64]
 
 // ============= MAIN COMPONENT =============
 
-const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate, paperColor }, ref) {
+const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate, paperColor, onPaperTemplateChange, onPaperColorChange }, ref) {
   const canvasRef = useRef(null)
   const patternCanvasRef = useRef(null)
   const contextRef = useRef(null)
   const containerRef = useRef(null)
+  const toolbarRef = useRef(null)
   
   // Tool state
   const [activeTool, setActiveTool] = useState('pen')
@@ -62,13 +83,32 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
   const [eraserSize, setEraserSize] = useState(20)
   const [activeShape, setActiveShape] = useState('rectangle')
   
-  // UI state
-  const [showToolOptions, setShowToolOptions] = useState(null)
+  // UI state - Panels/Dropdowns
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showPagesPanel, setShowPagesPanel] = useState(false)
+  const [showSearchPanel, setShowSearchPanel] = useState(false)
+  const [showAccessoriesMenu, setShowAccessoriesMenu] = useState(false)
+  const [showAddPageMenu, setShowAddPageMenu] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showElementsPanel, setShowElementsPanel] = useState(false)
+  const [showImageMenu, setShowImageMenu] = useState(false)
+  const [showPageSettings, setShowPageSettings] = useState(false)
+  
+  // Text tool state
+  const [fontSize, setFontSize] = useState(24)
+  const [fontFamily, setFontFamily] = useState('Modern')
+  const [isBold, setIsBold] = useState(false)
+  const [isItalic, setIsItalic] = useState(false)
+  const [textAlign, setTextAlign] = useState('left')
+  const [pinTextTool, setPinTextTool] = useState(false)
   
   // Page state
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [totalPages, setTotalPages] = useState(2)
+  const [pages, setPages] = useState([
+    { id: 1, thumbnail: null, isCover: true },
+    { id: 2, thumbnail: null, isCover: false },
+  ])
   
   // Drawing state
   const [isDrawing, setIsDrawing] = useState(false)
@@ -76,7 +116,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
   const [redoStack, setRedoStack] = useState([])
   const [points, setPoints] = useState([])
 
-  const { updateNote, getSelectedNote } = useAppStore()
+  const { updateNote, getSelectedNote, addToast } = useAppStore()
   const note = getSelectedNote()
 
   // Expose clearCanvas to parent via ref
@@ -86,7 +126,6 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
     const container = containerRef.current
     if (!canvas || !ctx || !container) return
     
-    // Save to undo stack before clearing
     setUndoStack((prev) => [...prev.slice(-49), canvas.toDataURL()])
     setRedoStack([])
     
@@ -101,6 +140,20 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
   useImperativeHandle(ref, () => ({
     clearCanvas
   }), [clearCanvas])
+
+  // Close all dropdown menus
+  const closeAllMenus = () => {
+    setShowAccessoriesMenu(false)
+    setShowAddPageMenu(false)
+    setShowShareMenu(false)
+    setShowElementsPanel(false)
+    setShowImageMenu(false)
+    setShowColorPicker(false)
+    setShowPageSettings(false)
+  }
+
+  // Check if tool options bar should show (only for drawing tools)
+  const showToolOptionsBar = ['pen', 'pencil', 'highlighter', 'eraser', 'shapes', 'text'].includes(activeTool)
 
   // ============= PAPER DRAWING =============
   
@@ -303,7 +356,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
 
   const startDrawing = (e) => {
     if (e.pointerType === 'touch' && activeTool !== 'hand') return
-    if (['hand', 'text', 'image', 'lasso', 'mic'].includes(activeTool)) return
+    if (['hand', 'text', 'image', 'lasso', 'elements', 'comment', 'link'].includes(activeTool)) return
 
     const { x, y, pressure } = getPointerPosition(e)
     setPoints([{ x, y, pressure }])
@@ -418,13 +471,15 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
   }
 
   const handleToolSelect = (toolId) => {
-    setActiveTool(toolId)
-    if (['pen', 'pencil', 'highlighter', 'eraser', 'shapes'].includes(toolId)) {
-      setShowToolOptions(showToolOptions === toolId ? null : toolId)
-    } else {
-      setShowToolOptions(null)
+    closeAllMenus()
+    
+    // If clicking the same tool, deselect it (hide floating panel)
+    if (activeTool === toolId) {
+      setActiveTool(null)
+      return
     }
-    setShowColorPicker(false)
+    
+    setActiveTool(toolId)
     
     if (toolId === 'highlighter') setPenSize(20)
     else if (toolId === 'pen') setPenSize(2)
@@ -440,239 +495,956 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
   // ============= RENDER =============
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#1C1C1E]">
-      {/* Top Toolbar - Compact like GoodNotes */}
-      <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-11 flex items-center px-3">
-        {/* Left Section: Undo/Redo */}
-        <div className="flex items-center gap-0.5 min-w-[80px]">
-          <button
-            onClick={handleUndo}
-            disabled={undoStack.length <= 1}
-            className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
-          >
-            <Undo2 size={18} />
-          </button>
-          <button
-            onClick={handleRedo}
-            disabled={redoStack.length === 0}
-            className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
-          >
-            <Redo2 size={18} />
-          </button>
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#1C1C1E] relative">
+      {/* Toolbar Container */}
+      <div ref={toolbarRef} className="relative z-20">
+        {/* Top Toolbar - GoodNotes style */}
+        <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-11 flex items-center px-3">
+          {/* Left Section: Pages, Search, Undo/Redo - fixed width for true centering */}
+          <div className="flex items-center gap-0.5 w-[100px]">
+            {/* Pages Panel Toggle */}
+            <button
+              onClick={() => { closeAllMenus(); setShowPagesPanel(!showPagesPanel) }}
+              className={`p-1.5 rounded-lg transition-all ${
+                showPagesPanel ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Pages"
+            >
+              <PanelLeft size={18} />
+            </button>
+            
+            {/* Search */}
+            <button
+              onClick={() => { closeAllMenus(); setShowSearchPanel(!showSearchPanel) }}
+              className={`p-1.5 rounded-lg transition-all ${
+                showSearchPanel ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Search"
+            >
+              <Search size={18} />
+            </button>
+
+            <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
+
+            {/* Undo/Redo */}
+            <button
+              onClick={handleUndo}
+              disabled={undoStack.length <= 1}
+              className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
+              title="Undo"
+            >
+              <Undo2 size={18} />
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={redoStack.length === 0}
+              className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
+              title="Redo"
+            >
+              <Redo2 size={18} />
+            </button>
+          </div>
+
+          {/* Center Section: Main Tools + Accessories - always centered */}
+          <div className="flex-1 flex items-center justify-center gap-0.5">
+            {MAIN_TOOLS.map((tool) => {
+              const Icon = tool.icon
+              const isActive = activeTool === tool.id
+              
+              if (tool.id === 'elements') {
+                return (
+                  <button
+                    key={tool.id}
+                    onClick={() => { 
+                      if (showElementsPanel) {
+                        // Already showing, close it
+                        setShowElementsPanel(false)
+                        setActiveTool(null)
+                      } else {
+                        closeAllMenus()
+                        setActiveTool('elements')
+                        setShowElementsPanel(true) 
+                      }
+                    }}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      showElementsPanel ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+                    }`}
+                    title={tool.name}
+                  >
+                    <Icon size={18} />
+                  </button>
+                )
+              }
+              if (tool.id === 'image') {
+                return (
+                  <button
+                    key={tool.id}
+                    onClick={() => { 
+                      if (showImageMenu) {
+                        // Already showing, close it
+                        setShowImageMenu(false)
+                        setActiveTool(null)
+                      } else {
+                        closeAllMenus()
+                        setActiveTool('image')
+                        setShowImageMenu(true) 
+                      }
+                    }}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      showImageMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+                    }`}
+                    title={tool.name}
+                  >
+                    <Icon size={18} />
+                  </button>
+                )
+              }
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => handleToolSelect(tool.id)}
+                  className={`p-1.5 rounded-lg transition-all ${
+                    isActive 
+                      ? 'bg-[#0A84FF] text-white' 
+                      : 'text-[#8E8E93] hover:bg-[#3A3A3C] hover:text-white'
+                  }`}
+                  title={tool.name}
+                >
+                  <Icon size={18} />
+                </button>
+              )
+            })}
+
+            {/* Accessories Menu - part of center section */}
+            <button
+              onClick={() => { closeAllMenus(); setShowAccessoriesMenu(!showAccessoriesMenu) }}
+              className={`p-1.5 rounded-lg transition-all relative ${
+                showAccessoriesMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Accessories"
+            >
+              <Mic size={18} />
+              <ChevronDown size={10} className="absolute -bottom-0.5 -right-0.5" />
+            </button>
+          </div>
+
+          {/* Right Section: Add Page, Share, Page Settings - fixed width to match left for true centering */}
+          <div className="flex items-center gap-0.5 w-[100px] justify-end">
+            <button
+              onClick={() => { closeAllMenus(); setShowAddPageMenu(!showAddPageMenu) }}
+              className={`p-1.5 rounded-lg transition-all ${
+                showAddPageMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Add Page"
+            >
+              <Plus size={18} />
+            </button>
+            <button
+              onClick={() => { closeAllMenus(); setShowShareMenu(!showShareMenu) }}
+              className={`p-1.5 rounded-lg transition-all ${
+                showShareMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Share"
+            >
+              <Upload size={18} />
+            </button>
+            <button
+              onClick={() => { closeAllMenus(); setShowPageSettings(!showPageSettings) }}
+              className={`p-1.5 rounded-lg transition-all ${
+                showPageSettings ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+              title="Page Settings"
+            >
+              <Settings size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Center Section: Main Tools */}
-        <div className="flex-1 flex items-center justify-center gap-0.5">
-          {TOOLS.map((tool) => {
-            const Icon = tool.icon
-            const isActive = activeTool === tool.id
-            return (
-              <button
-                key={tool.id}
-                onClick={() => handleToolSelect(tool.id)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  isActive 
-                    ? 'bg-[#0A84FF] text-white' 
-                    : 'text-[#8E8E93] hover:bg-[#3A3A3C] hover:text-white'
-                }`}
-                title={tool.name}
-              >
-                <Icon size={18} />
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Right Section: Actions */}
-        <div className="flex items-center gap-0.5 min-w-[80px] justify-end">
-          <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="Add Page">
-            <Plus size={18} />
-          </button>
-          <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="Share">
-            <Share2 size={18} />
-          </button>
-          <button className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C]" title="Duplicate">
-            <CopyIcon size={18} />
-          </button>
-        </div>
       </div>
 
-      {/* Active Tool Options Bar - Compact */}
-      {showToolOptions && (
-        <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-10 flex items-center justify-center px-3">
-          <div className="flex items-center gap-3">
-            {/* Pen/Pencil/Highlighter options */}
-            {['pen', 'pencil', 'highlighter'].includes(showToolOptions) && (
-              <>
-                <button className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#3A3A3C] text-white text-xs">
-                  <span>Standard</span>
-                  <ChevronDown size={10} />
-                </button>
-                
-                <div className="flex items-center gap-1.5">
-                  <button 
-                    onClick={() => setPenSize(s => Math.max(1, s - 1))}
-                    className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
-                  >
-                    <Minus size={12} />
-                  </button>
-                  <button
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                    className="w-7 h-7 rounded-full border-2 border-white/30"
-                    style={{ backgroundColor: activeColor }}
-                  />
-                  <button 
-                    onClick={() => setPenSize(s => Math.min(50, s + 1))}
-                    className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
+      {/* Floating Pen Tool Options - Positioned over canvas */}
+      {(activeTool === 'pen' || activeTool === 'pencil' || activeTool === 'highlighter') && (
+        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+          <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
+              {/* Undo in sub-bar */}
+              <button
+                onClick={handleUndo}
+                disabled={undoStack.length <= 1}
+                className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
+              >
+                <Undo2 size={16} />
+              </button>
 
-                <div className="w-16 h-6 rounded-md overflow-hidden border border-[#3A3A3C]">
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+              {/* Pen type selector */}
+              <button 
+                onClick={() => setActiveTool('pen')}
+                className={`p-1.5 rounded-md ${activeTool === 'pen' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <Pen size={16} />
+              </button>
+              <button 
+                onClick={() => setActiveTool('highlighter')}
+                className={`p-1.5 rounded-md ${activeTool === 'highlighter' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <Highlighter size={16} />
+              </button>
+              <button 
+                onClick={() => setActiveTool('pencil')}
+                className={`p-1.5 rounded-md ${activeTool === 'pencil' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <Pencil size={16} />
+              </button>
+              <button 
+                onClick={() => setActiveTool('eraser')}
+                className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]"
+              >
+                <Eraser size={16} />
+              </button>
+              <button 
+                onClick={() => setActiveTool('lasso')}
+                className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]"
+              >
+                <Lasso size={16} />
+              </button>
+
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+              {/* Stroke sizes */}
+              {PEN_STROKE_SIZES.map((size) => (
+                <button
+                  key={size.id}
+                  onClick={() => setPenSize(size.width)}
+                  className={`w-7 h-7 rounded-md flex items-center justify-center ${
+                    penSize === size.width ? 'bg-[#3A3A3C]' : 'hover:bg-[#3A3A3C]'
+                  }`}
+                >
                   <div 
-                    className="w-full h-full"
-                    style={{
-                      background: `repeating-linear-gradient(45deg, ${activeColor}, ${activeColor} 2px, transparent 2px, transparent 6px)`
+                    className="rounded-full bg-white"
+                    style={{ 
+                      width: size.width * 2 + 2,
+                      height: size.width * 2 + 2
                     }}
                   />
-                </div>
-              </>
-            )}
-
-            {showToolOptions === 'eraser' && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8E8E93]">Size</span>
-                <button 
-                  onClick={() => setEraserSize(s => Math.max(5, s - 5))}
-                  className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
-                >
-                  <Minus size={12} />
                 </button>
-                <input
-                  type="range"
-                  min="5"
-                  max="60"
-                  value={eraserSize}
-                  onChange={(e) => setEraserSize(Number(e.target.value))}
-                  className="w-24"
+              ))}
+
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+              {/* Quick colors */}
+              {PEN_QUICK_COLORS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setActiveColor(color)}
+                  className={`w-6 h-6 rounded-full transition-transform ${
+                    activeColor === color ? 'ring-2 ring-white scale-110' : ''
+                  }`}
+                  style={{ backgroundColor: color }}
                 />
-                <button 
-                  onClick={() => setEraserSize(s => Math.min(60, s + 5))}
-                  className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
-            )}
+              ))}
 
-            {showToolOptions === 'shapes' && (
+            {/* Color picker trigger */}
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 flex items-center justify-center"
+            >
+              <Plus size={12} className="text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Text Tool Options - Positioned over canvas */}
+      {activeTool === 'text' && (
+        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+          <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
+              {/* Color picker */}
+              <button
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                className="w-6 h-6 rounded-full border-2 border-white/30"
+                style={{ backgroundColor: activeColor }}
+              />
+
+              {/* Font size */}
+              <select
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
+                className="bg-[#3A3A3C] text-white text-sm rounded-md px-2 py-1 border-none outline-none"
+              >
+                {FONT_SIZES.map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+
+              {/* Font family */}
+              <select
+                value={fontFamily}
+                onChange={(e) => setFontFamily(e.target.value)}
+                className="bg-[#3A3A3C] text-white text-sm rounded-md px-2 py-1 border-none outline-none"
+              >
+                {FONTS.map((font) => (
+                  <option key={font} value={font}>{font}</option>
+                ))}
+              </select>
+
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+              {/* Bold / Italic */}
+              <button
+                onClick={() => setIsBold(!isBold)}
+                className={`p-1.5 rounded-md ${isBold ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <Bold size={16} />
+              </button>
+              <button
+                onClick={() => setIsItalic(!isItalic)}
+                className={`p-1.5 rounded-md ${isItalic ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <Italic size={16} />
+              </button>
+
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+              {/* Alignment */}
+              <button
+                onClick={() => setTextAlign('left')}
+                className={`p-1.5 rounded-md ${textAlign === 'left' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <AlignLeft size={16} />
+              </button>
+              <button
+                onClick={() => setTextAlign('center')}
+                className={`p-1.5 rounded-md ${textAlign === 'center' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <AlignCenter size={16} />
+              </button>
+              <button
+                onClick={() => setTextAlign('right')}
+                className={`p-1.5 rounded-md ${textAlign === 'right' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'}`}
+              >
+                <AlignRight size={16} />
+              </button>
+
+              <div className="w-px h-5 bg-[#3A3A3C]" />
+
+            {/* Text box / Pin text tool */}
+            <button className="p-1.5 rounded-full text-[#8E8E93] hover:bg-[#3A3A3C]">
+              <Square size={16} />
+            </button>
+            <button
+              onClick={() => setPinTextTool(!pinTextTool)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
+                pinTextTool ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+              }`}
+            >
+              <Pin size={14} />
+              <span className="text-xs">Pin Text Tool</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Shapes Tool Options - Positioned over canvas */}
+      {activeTool === 'shapes' && (
+        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+          <div className="flex items-center gap-1 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
+              {SHAPE_TYPES.map((shape) => {
+                const Icon = shape.icon
+                return (
+                  <button
+                    key={shape.id}
+                    onClick={() => setActiveShape(shape.id)}
+                    className={`p-1.5 rounded-md ${
+                      activeShape === shape.id ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
+                    }`}
+                  >
+                    <Icon size={16} />
+                  </button>
+                )
+              })}
+
+              <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
+
+            {/* Fill color */}
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="w-6 h-6 rounded-full border-2 border-white/30"
+              style={{ backgroundColor: activeColor }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Eraser Tool Options - Positioned over canvas */}
+      {activeTool === 'eraser' && (
+        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+          <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
+              <span className="text-xs text-[#8E8E93]">Standard</span>
+              <ChevronDown size={12} className="text-[#8E8E93]" />
+
+              <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
+
+              <button 
+                onClick={() => setEraserSize(s => Math.max(5, s - 5))}
+                className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
+              >
+                <Minus size={12} />
+              </button>
+              
               <div className="flex items-center gap-1">
-                {SHAPE_TYPES.map((shape) => {
-                  const Icon = shape.icon
+                <div 
+                  className="rounded-full bg-[#8E8E93]"
+                  style={{ width: eraserSize / 2, height: eraserSize / 2 }}
+                />
+              </div>
+
+            <button 
+              onClick={() => setEraserSize(s => Math.min(60, s + 5))}
+              className="w-6 h-6 rounded-full bg-[#3A3A3C] text-white flex items-center justify-center"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ============= DROPDOWN MENUS - Fixed Position below first toolbar ============= */}
+
+      {/* Page Settings Menu */}
+      {showPageSettings && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowPageSettings(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
+            style={{ top: '90px', right: '12px' }}
+          >
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Page Settings</span>
+            </div>
+
+            {/* Template Section */}
+            <div className="p-1.5">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Template</p>
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                {['Blank', 'Dotted', 'Grid', 'Lined', 'Margin', 'Cornell'].map((template, index, arr) => {
+                  const templateId = template.toLowerCase().replace(' ', '-')
+                  const actualTemplateId = templateId === 'margin' ? 'lined-margin' : templateId
+                  const isActive = paperTemplate === actualTemplateId
                   return (
                     <button
-                      key={shape.id}
-                      onClick={() => setActiveShape(shape.id)}
-                      className={`p-1.5 rounded-md ${
-                        activeShape === shape.id ? 'bg-[#0A84FF] text-white' : 'bg-[#3A3A3C] text-[#8E8E93]'
+                      key={template}
+                      onClick={() => {
+                        if (onPaperTemplateChange) {
+                          onPaperTemplateChange(actualTemplateId)
+                        }
+                      }}
+                      className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] ${
+                        index < arr.length - 1 ? 'border-b border-[#3A3A3C]' : ''
                       }`}
                     >
-                      <Icon size={16} />
+                      <span className={`text-[15px] flex-1 text-left ${
+                        isActive ? 'text-[#0A84FF]' : 'text-white'
+                      }`}>
+                        {template}
+                      </span>
+                      {isActive && (
+                        <div className="w-2 h-2 rounded-full bg-[#0A84FF]" />
+                      )}
                     </button>
                   )
                 })}
               </div>
-            )}
+            </div>
+
+            {/* Paper Color Section */}
+            <div className="px-1.5 pb-1.5">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Paper Color</p>
+              <div className="bg-[#1C1C1E] rounded-lg p-3">
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { name: 'White', hex: '#FFFFFF' },
+                    { name: 'Cream', hex: '#FFF8E7' },
+                    { name: 'Yellow', hex: '#FFFDE7' },
+                    { name: 'Green', hex: '#E8F5E9' },
+                    { name: 'Blue', hex: '#E3F2FD' },
+                    { name: 'Dark', hex: '#2C2C2E' },
+                    { name: 'Sepia', hex: '#F5E6D3' },
+                    { name: 'Rose', hex: '#FCE4EC' },
+                  ].map((color) => (
+                    <button
+                      key={color.hex}
+                      onClick={() => {
+                        if (onPaperColorChange) {
+                          onPaperColorChange(color.hex)
+                        }
+                      }}
+                      className={`w-7 h-7 rounded-full transition-transform ${
+                        paperColor === color.hex ? 'ring-2 ring-[#0A84FF] scale-110' : ''
+                      }`}
+                      style={{ backgroundColor: color.hex, border: '1px solid #3A3A3C' }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Clear Page */}
+            <div className="px-1.5 pb-1.5">
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button
+                  onClick={() => {
+                    clearCanvas()
+                    setShowPageSettings(false)
+                  }}
+                  className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]"
+                >
+                  <RotateCcw size={18} className="text-[#FF453A]" />
+                  <span className="text-[15px] text-[#FF453A]">Clear This Page</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
+      )}
+
+      {/* Accessories Menu */}
+      {showAccessoriesMenu && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowAccessoriesMenu(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
+            style={{ top: '90px', left: '50%', marginLeft: '80px', transform: 'translateX(-50%)' }}
+          >
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Accessories</span>
+            </div>
+            <div className="p-1.5">
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#FF3B30]" />
+                  </div>
+                  <span className="text-white text-[15px]">Record & Summarize</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Mic size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Show Recordings</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <ZoomIn size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Zoom Window</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Ruler size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Ruler</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <Clock size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Time Keeper</span>
+                </button>
+              </div>
+            </div>
+            <div className="p-1.5 pt-0">
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <span className="text-white text-[15px]">Toolbar Customization</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Add Page Menu */}
+      {showAddPageMenu && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowAddPageMenu(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
+            style={{ top: '90px', right: '76px' }}
+          >
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Add Page</span>
+            </div>
+            
+            {/* Position tabs */}
+            <div className="flex justify-center gap-2 p-3 border-b border-[#3A3A3C]">
+              <button className="px-4 py-1.5 rounded-lg bg-[#3A3A3C] text-white text-sm">Before</button>
+              <button className="px-4 py-1.5 rounded-lg bg-[#1C1C1E] text-white text-sm">After</button>
+              <button className="px-4 py-1.5 rounded-lg text-[#8E8E93] text-sm hover:bg-[#3A3A3C]">Last Page</button>
+            </div>
+
+            {/* Recent templates */}
+            <div className="p-3">
+              <p className="text-[13px] font-medium text-white mb-1">Recent templates</p>
+              <p className="text-[11px] text-[#8E8E93] mb-3">Templates shown here inherit current page attributes whenever possible.</p>
+              
+              <div className="bg-[#1C1C1E] rounded-lg p-3 mb-3">
+                <div className="w-16 h-20 bg-[#FFFDE7] rounded border border-[#3A3A3C]" />
+                <p className="text-[11px] text-[#8E8E93] mt-2">Current Template</p>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="p-1.5 pt-0">
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <FileText size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">More from Templates...</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Image size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Image</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <ScanLine size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Scan Documents</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Camera size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Take Photo</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <Download size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Import</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Share Menu */}
+      {showShareMenu && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowShareMenu(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
+            style={{ top: '90px', right: '44px' }}
+          >
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Share and Export</span>
+            </div>
+            
+            {/* Collaboration */}
+            <div className="p-1.5">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Collaboration</p>
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <Share2 size={18} className="text-[#8E8E93]" />
+                  <div className="flex-1 text-left">
+                    <span className="text-white text-[15px]">Share...</span>
+                    <p className="text-[11px] text-[#8E8E93]">Invite, view collaborators</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Export */}
+            <div className="p-1.5 pt-0">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Export</p>
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Upload size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Export This Page</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Upload size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Export All</span>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <Printer size={18} className="text-[#8E8E93]" />
+                  <span className="text-white text-[15px]">Print</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Presentation Mode */}
+            <div className="p-1.5 pt-0">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Presentation Mode</p>
+              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Monitor size={18} className="text-[#8E8E93]" />
+                  <div className="flex-1 text-left">
+                    <span className="text-white text-[15px]">Mirror Entire Screen</span>
+                    <p className="text-[11px] text-[#8E8E93]">Audience sees what presenter sees</p>
+                  </div>
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+                  <Monitor size={18} className="text-[#8E8E93]" />
+                  <div className="flex-1 text-left">
+                    <span className="text-white text-[15px]">Mirror Presenter Page</span>
+                    <p className="text-[11px] text-[#8E8E93]">Audience doesn't see the interface</p>
+                  </div>
+                  <Check size={18} className="text-[#0A84FF]" />
+                </button>
+                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+                  <Monitor size={18} className="text-[#8E8E93]" />
+                  <div className="flex-1 text-left">
+                    <span className="text-white text-[15px]">Mirror Full Page</span>
+                    <p className="text-[11px] text-[#8E8E93]">Audience doesn't see interface & zoom</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Elements Panel */}
+      {showElementsPanel && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowElementsPanel(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
+            style={{ top: '90px', left: '50%', transform: 'translateX(-50%)' }}
+          >
+            <div className="flex items-center justify-between py-2 px-4 border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Recents</span>
+              <button className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
+                <PanelLeft size={18} />
+              </button>
+            </div>
+            
+            <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
+              <div className="w-12 h-12 rounded-full border-2 border-[#3A3A3C] flex items-center justify-center mb-3">
+                <Smile size={24} className="text-[#8E8E93]" />
+              </div>
+              <p className="text-white font-medium text-[15px]">No Recent Elements</p>
+              <p className="text-[#8E8E93] text-[13px] text-center mt-1">After you inserted or created an element, it will appear here.</p>
+            </div>
+
+            {/* Category tabs */}
+            <div className="flex justify-center gap-2 p-3 border-t border-[#3A3A3C]">
+              <button className="w-10 h-10 rounded-xl bg-[#0A84FF] flex items-center justify-center">
+                <Clock size={20} className="text-white" />
+              </button>
+              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
+                <span className="text-xl leading-none">📝</span>
+              </button>
+              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
+                <span className="text-xl leading-none">🏈</span>
+              </button>
+              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
+                <span className="text-xl leading-none">📅</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Image Menu */}
+      {showImageMenu && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowImageMenu(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
+            style={{ top: '90px', left: '50%', transform: 'translateX(-50%)' }}
+          >
+            <div className="flex items-center justify-between py-2 px-4 border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Images</span>
+              <button className="p-1 rounded-md text-[#0A84FF] hover:bg-[#3A3A3C]">
+                <Camera size={18} />
+              </button>
+            </div>
+            
+            {/* Image grid placeholder */}
+            <div className="p-3 grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+              {[...Array(12)].map((_, i) => (
+                <div 
+                  key={i}
+                  className="aspect-square bg-[#3A3A3C] rounded-lg"
+                />
+              ))}
+            </div>
+
+            <div className="p-3 border-t border-[#3A3A3C]">
+              <button className="w-full py-2 text-[#0A84FF] text-[15px] hover:bg-[#3A3A3C] rounded-lg">
+                Insert from...
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Color Picker Dropdown */}
       {showColorPicker && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] overflow-hidden w-56">
-          {/* Header */}
-          <div className="py-2 text-center border-b border-[#3A3A3C]">
-            <span className="text-white font-medium text-[15px]">Color</span>
-          </div>
-          
-          <div className="p-1.5">
-            {/* Basic Colors */}
-            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Basic</p>
-            <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
-              <div className="flex gap-2 justify-center">
-                {COLORS.basic.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
-                    style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #636366' : 'none' }}
-                  />
-                ))}
-              </div>
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowColorPicker(false)} />
+          <div 
+            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] overflow-hidden w-56"
+            style={{ 
+              top: showToolOptionsBar ? '134px' : '90px',
+              left: '50%',
+              transform: 'translateX(-50%)'
+            }}
+          >
+            <div className="py-2 text-center border-b border-[#3A3A3C]">
+              <span className="text-white font-medium text-[15px]">Color</span>
             </div>
             
-            {/* Vivid Colors */}
-            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Vivid</p>
-            <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
-              <div className="flex gap-2 flex-wrap justify-center">
-                {COLORS.vivid.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
+            <div className="p-1.5">
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Basic</p>
+              <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+                <div className="flex gap-2 justify-center">
+                  {COLORS.basic.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                      className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                      style={{ backgroundColor: color, border: color === '#FFFFFF' ? '1px solid #636366' : 'none' }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-            
-            {/* Pastel Colors */}
-            <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Pastel</p>
-            <div className="bg-[#1C1C1E] rounded-lg p-2.5">
-              <div className="flex gap-2 justify-center">
-                {COLORS.pastel.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
-                    className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
+              
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Vivid</p>
+              <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+                <div className="flex gap-2 flex-wrap justify-center">
+                  {COLORS.vivid.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                      className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Pastel</p>
+              <div className="bg-[#1C1C1E] rounded-lg p-2.5">
+                <div className="flex gap-2 justify-center">
+                  {COLORS.pastel.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => { setActiveColor(color); setShowColorPicker(false) }}
+                      className={`w-7 h-7 rounded-full transition-transform ${activeColor === color ? 'ring-2 ring-[#0A84FF] scale-110' : ''}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Canvas Area - Full Width */}
-      <div 
-        ref={containerRef} 
-        className="flex-1 relative overflow-auto"
-        onClick={() => { setShowColorPicker(false) }}
-      >
-        <canvas
-          ref={patternCanvasRef}
-          className="absolute inset-0 touch-none pointer-events-none"
-        />
-        <canvas
-          ref={canvasRef}
-          onPointerDown={startDrawing}
-          onPointerMove={draw}
-          onPointerUp={stopDrawing}
-          onPointerLeave={stopDrawing}
-          className="absolute inset-0 touch-none"
-          style={{ cursor: getCursor() }}
-        />
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Pages Panel (Left Sidebar) */}
+        {showPagesPanel && (
+          <div className="w-64 bg-[#1C1C1E] border-r border-[#3A3A3C] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-[#3A3A3C]">
+              <div className="flex items-center gap-2">
+                <button className="text-[#8E8E93] hover:text-white">•••</button>
+                <span className="text-white font-medium">Pages</span>
+              </div>
+              <button 
+                onClick={() => setShowPagesPanel(false)}
+                className="text-[#8E8E93] hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Page view tabs */}
+            <div className="flex items-center justify-center gap-1 p-2 border-b border-[#3A3A3C]">
+              <button className="p-1.5 rounded-md bg-[#3A3A3C] text-white">
+                <FileText size={16} />
+              </button>
+              <button className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
+                <Layout size={16} />
+              </button>
+              <button className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
+                <Mic size={16} />
+              </button>
+            </div>
+
+            {/* Filter */}
+            <div className="px-3 py-2">
+              <button className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#3A3A3C] text-white text-sm">
+                All Pages
+                <ChevronDown size={14} />
+              </button>
+            </div>
+
+            {/* Pages grid */}
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="grid grid-cols-2 gap-3">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.id}
+                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 ${
+                      currentPage === page.id ? 'border-[#0A84FF]' : 'border-transparent'
+                    }`}
+                    onClick={() => setCurrentPage(page.id)}
+                  >
+                    <div 
+                      className={`aspect-[3/4] ${
+                        page.isCover ? 'bg-gradient-to-b from-cyan-400 to-cyan-600' : 'bg-[#FFFDE7]'
+                      }`}
+                    >
+                      {page.isCover && (
+                        <div className="absolute right-1 top-1/2 w-1 h-8 bg-cyan-700 rounded-l" />
+                      )}
+                    </div>
+                    <div className="absolute top-1 right-1">
+                      <Bookmark size={14} className="text-[#8E8E93]" />
+                    </div>
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-[11px] text-[#8E8E93]">{index + 1}</span>
+                      <ChevronDown size={12} className="text-[#8E8E93]" />
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add page button */}
+                <div 
+                  className="aspect-[3/4] border-2 border-dashed border-[#3A3A3C] rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0A84FF] transition-colors"
+                  onClick={() => {
+                    const newPage = { id: pages.length + 1, thumbnail: null, isCover: false }
+                    setPages([...pages, newPage])
+                    setTotalPages(totalPages + 1)
+                  }}
+                >
+                  <Plus size={24} className="text-[#0A84FF]" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Canvas Area */}
+        <div 
+          ref={containerRef} 
+          className="flex-1 relative overflow-auto"
+          onClick={() => { setShowColorPicker(false) }}
+        >
+          <canvas
+            ref={patternCanvasRef}
+            className="absolute inset-0 touch-none pointer-events-none"
+          />
+          <canvas
+            ref={canvasRef}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerLeave={stopDrawing}
+            className="absolute inset-0 touch-none"
+            style={{ cursor: getCursor() }}
+          />
+        </div>
       </div>
 
-      {/* Bottom Bar - Page Number Only - Compact */}
+      {/* Bottom Bar - Page Number */}
       <div className="bg-[#2C2C2E] border-t border-[#3A3A3C] h-8 flex items-center justify-center">
         <span className="text-xs text-[#8E8E93]">
           {currentPage} of {totalPages}
         </span>
       </div>
-
     </div>
   )
 })

@@ -358,29 +358,37 @@ export default function ContentHeader() {
                   <div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
                     
-                    {/* Top Row - Main creation options with icons */}
-                    <div className="p-4 pb-2">
-                      <div className="flex justify-center gap-4">
+                    {/* Header */}
+                    <div className="py-3 text-center border-b border-[#3A3A3C]">
+                      <h3 className="text-white font-semibold text-[15px]">Create New</h3>
+                    </div>
+
+                    {/* Quick Create Section - Icon Grid */}
+                    <div className="p-3 pb-2">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Quick Create
+                      </p>
+                      <div className="flex justify-center gap-3">
                         {/* Notebook */}
                         <button
                           onClick={handleNewNotebook}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#3A3A3C] transition-colors min-w-[80px]"
+                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
-                          <div className="w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Document set="broken" size={24} stroke="regular" primaryColor="#fff" />
+                          <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
+                            <Document set="broken" size={22} stroke="regular" primaryColor="#fff" />
                           </div>
-                          <span className="text-white text-[13px]">Notebook</span>
+                          <span className="text-white text-[12px]">Notebook</span>
                         </button>
 
                         {/* Text Doc */}
                         <button
                           onClick={handleQuickNote}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#3A3A3C] transition-colors min-w-[80px]"
+                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
-                          <div className="w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <FileText size={24} className="text-white" />
+                          <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
+                            <FileText size={22} className="text-white" />
                           </div>
-                          <span className="text-white text-[13px]">Text Doc</span>
+                          <span className="text-white text-[12px]">Text Doc</span>
                         </button>
 
                         {/* Whiteboard */}
@@ -389,56 +397,55 @@ export default function ContentHeader() {
                             addToast({ message: 'Whiteboard coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#3A3A3C] transition-colors min-w-[80px]"
+                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
-                          <div className="w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Layout size={24} className="text-white" />
+                          <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
+                            <Layout size={22} className="text-white" />
                           </div>
-                          <span className="text-white text-[13px]">Whiteboard</span>
+                          <span className="text-white text-[12px]">Whiteboard</span>
                         </button>
                       </div>
-                    </div>
 
-                    {/* Second Row - Import and Quick Record */}
-                    <div className="px-4 pb-4">
-                      <div className="flex justify-center gap-4">
-                        {/* Import */}
+                      {/* Second row - Import and Quick Record */}
+                      <div className="flex justify-center gap-3 mt-1">
                         <button
                           onClick={handleImport}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#3A3A3C] transition-colors min-w-[80px]"
+                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
-                          <div className="w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Download size={24} className="text-white" />
+                          <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
+                            <Download size={22} className="text-white" />
                           </div>
-                          <span className="text-white text-[13px]">Import</span>
+                          <span className="text-white text-[12px]">Import</span>
                         </button>
 
-                        {/* Quick Record */}
                         <button
                           onClick={() => {
                             addToast({ message: 'Quick Record coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#3A3A3C] transition-colors min-w-[80px]"
+                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
-                          <div className="w-12 h-12 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Mic size={24} className="text-white" />
+                          <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
+                            <Mic size={22} className="text-white" />
                           </div>
-                          <span className="text-white text-[13px]">Quick Record</span>
+                          <span className="text-white text-[12px]">Quick Record</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* List Options Section */}
+                    {/* More Options Section */}
                     <div className="px-3 pb-2">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        More Options
+                      </p>
                       <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                         {/* QuickNote */}
                         <button
                           onClick={handleQuickNote}
-                          className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
-                          <Edit set="broken" size={22} stroke="regular" primaryColor="#fff" />
-                          <span className="text-white text-[17px]">QuickNote</span>
+                          <Edit set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                          <span className="text-white text-[15px]">QuickNote</span>
                         </button>
 
                         {/* Scan Documents */}
@@ -447,10 +454,10 @@ export default function ContentHeader() {
                             addToast({ message: 'Scan Documents coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
-                          <Scan set="broken" size={22} stroke="regular" primaryColor="#fff" />
-                          <span className="text-white text-[17px]">Scan Documents</span>
+                          <Scan set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                          <span className="text-white text-[15px]">Scan Documents</span>
                         </button>
 
                         {/* Study Set */}
@@ -459,10 +466,10 @@ export default function ContentHeader() {
                             addToast({ message: 'Study Set coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
-                          <BookOpen size={22} className="text-white" />
-                          <span className="text-white text-[17px]">Study Set</span>
+                          <BookOpen size={20} className="text-[#8E8E93]" />
+                          <span className="text-white text-[15px]">Study Set</span>
                         </button>
 
                         {/* Image */}
@@ -471,10 +478,10 @@ export default function ContentHeader() {
                             addToast({ message: 'Image import coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
-                          <ImageIcon set="broken" size={22} stroke="regular" primaryColor="#fff" />
-                          <span className="text-white text-[17px]">Image</span>
+                          <ImageIcon set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                          <span className="text-white text-[15px]">Image</span>
                         </button>
 
                         {/* Take Photo */}
@@ -483,23 +490,28 @@ export default function ContentHeader() {
                             addToast({ message: 'Take Photo coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors"
                         >
-                          <Camera set="broken" size={22} stroke="regular" primaryColor="#fff" />
-                          <span className="text-white text-[17px]">Take Photo</span>
+                          <Camera set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                          <span className="text-white text-[15px]">Take Photo</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Folder Option - Separate card */}
+                    {/* Organize Section */}
                     <div className="px-3 pb-3">
-                      <button
-                        onClick={handleNewFolder}
-                        className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors"
-                      >
-                        <Folder set="broken" size={22} stroke="regular" primaryColor="#fff" />
-                        <span className="text-white text-[17px]">Folder</span>
-                      </button>
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Organize
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        <button
+                          onClick={handleNewFolder}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors"
+                        >
+                          <Folder set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                          <span className="text-white text-[15px]">Folder</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>

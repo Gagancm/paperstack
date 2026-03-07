@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, Star, Delete, CloseSquare, TickSquare, MoreSquare, ChevronRight, Bookmark, Send, Swap, Lock, Message, Setting, Edit } from 'react-iconly'
-import { Tag, Copy, Settings, ListTree, Trash2, PanelLeft, MoveHorizontal, SlidersHorizontal, RotateCcw } from 'lucide-react'
+import { Tag, Copy, ListTree, Trash2, PanelLeft, MoveHorizontal, SlidersHorizontal } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 import UnifiedCanvas from './UnifiedCanvas'
 
@@ -44,7 +44,7 @@ export default function NoteEditor({ onClose }) {
   const [showMenu, setShowMenu] = useState(false)
   const [showLabelPicker, setShowLabelPicker] = useState(false)
   const [showFolderPicker, setShowFolderPicker] = useState(false)
-  const [showPageSettings, setShowPageSettings] = useState(false)
+  // Page settings now handled in UnifiedCanvas
   const canvasRef = useRef(null)
 
   const note = getSelectedNote()
@@ -88,8 +88,8 @@ export default function NoteEditor({ onClose }) {
     <div className="fixed inset-0 z-50 bg-[#1C1C1E] flex flex-col">
       {/* Header - matches home/folder design */}
       <div className="flex items-center px-3 h-11 bg-[#2C2C2E] border-b border-[#3A3A3C]">
-        {/* Left: Back button */}
-        <div className="flex items-center min-w-[80px]">
+        {/* Left: Back button - fixed width for true centering */}
+        <div className="flex items-center w-[100px]">
           <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#0A84FF]">
             <ChevronLeft set="broken" size={18} stroke="regular" />
           </button>
@@ -113,8 +113,8 @@ export default function NoteEditor({ onClose }) {
           />
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-0.5 min-w-[80px] justify-end">
+        {/* Right: Actions - fixed width to match left for true centering */}
+        <div className="flex items-center gap-0.5 w-[100px] justify-end">
           <button
             onClick={() => togglePinNote(note.id)}
             className={`p-1.5 rounded-lg hover:bg-[#3A3A3C] ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
@@ -174,94 +174,6 @@ export default function NoteEditor({ onClose }) {
                           No labels yet
                         </div>
                       )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="relative">
-            <button 
-              onClick={() => setShowPageSettings(!showPageSettings)} 
-              className={`p-1.5 rounded-lg hover:bg-[#3A3A3C] ${showPageSettings ? 'text-[#0A84FF]' : 'text-[#8E8E93]'}`}
-            >
-              <Settings size={18} />
-            </button>
-
-            {showPageSettings && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowPageSettings(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-xl shadow-xl z-50 w-64 max-h-[80vh] overflow-y-auto border border-[#3A3A3C]">
-                  {/* Header */}
-                  <div className="py-2 text-center border-b border-[#3A3A3C] sticky top-0 bg-[#2C2C2E] rounded-t-xl">
-                    <span className="text-white font-medium text-[15px]">Page Settings</span>
-                  </div>
-
-                  {/* Template Section */}
-                  <div className="p-1.5">
-                    <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Template</p>
-                    <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                      {PAPER_TEMPLATES.map((template, index) => (
-                        <button
-                          key={template.id}
-                          onClick={() => {
-                            setPaperTemplate(template.id)
-                            updateNote(note.id, { paperTemplate: template.id })
-                          }}
-                          className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] ${
-                            index < PAPER_TEMPLATES.length - 1 ? 'border-b border-[#3A3A3C]' : ''
-                          }`}
-                        >
-                          <span className={`text-[15px] flex-1 text-left ${
-                            paperTemplate === template.id ? 'text-[#0A84FF]' : 'text-white'
-                          }`}>
-                            {template.name}
-                          </span>
-                          {paperTemplate === template.id && (
-                            <div className="w-2 h-2 rounded-full bg-[#0A84FF]" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Paper Color Section */}
-                  <div className="px-1.5 pb-1.5">
-                    <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Paper Color</p>
-                    <div className="bg-[#1C1C1E] rounded-lg p-3">
-                      <div className="flex flex-wrap gap-2">
-                        {PAPER_COLORS.map((color) => (
-                          <button
-                            key={color.hex}
-                            onClick={() => {
-                              setPaperColor(color.hex)
-                              updateNote(note.id, { paperColor: color.hex })
-                            }}
-                            className={`w-7 h-7 rounded-full transition-transform ${
-                              paperColor === color.hex ? 'ring-2 ring-[#0A84FF] scale-110' : ''
-                            }`}
-                            style={{ backgroundColor: color.hex, border: '1px solid #3A3A3C' }}
-                            title={color.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Clear Page */}
-                  <div className="px-1.5 pb-1.5">
-                    <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => {
-                          canvasRef.current?.clearCanvas?.()
-                          setShowPageSettings(false)
-                        }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]"
-                      >
-                        <RotateCcw size={18} className="text-[#FF453A]" />
-                        <span className="text-[15px] text-[#FF453A]">Clear This Page</span>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -458,6 +370,14 @@ export default function NoteEditor({ onClose }) {
         noteId={note.id}
         paperTemplate={paperTemplate}
         paperColor={paperColor}
+        onPaperTemplateChange={(template) => {
+          setPaperTemplate(template)
+          updateNote(note.id, { paperTemplate: template })
+        }}
+        onPaperColorChange={(color) => {
+          setPaperColor(color)
+          updateNote(note.id, { paperColor: color })
+        }}
       />
     </div>
   )

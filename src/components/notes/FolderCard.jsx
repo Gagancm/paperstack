@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Delete, Star, Folder } from 'react-iconly'
-import { X, Check, Upload, Plus, Tag } from 'lucide-react'
+import { ChevronDown, Delete, Star, Folder, Image as ImageIcon, TickSquare } from 'react-iconly'
+import { X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, Lightbulb, Target, TrendingUp, Users, ShoppingBag, Plane, Car, Utensils, Dumbbell, Moon, Sun, Cloud, Umbrella, Leaf, Flower2, Smile, FolderOpen, Archive, FileText, Inbox } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 // Folder color options using our existing color scheme
@@ -17,19 +17,76 @@ const FOLDER_COLORS = {
   gray: { main: '#8E8E93', light: '#AEAEB2', dark: '#7A7A7E' },
 }
 
-const COLOR_OPTIONS = [
-  { id: 'blue', color: '#0A84FF' },
+// Extended color palette like GoodNotes
+const COLOR_PALETTE = [
+  // Row 1 - Rainbow spectrum
+  { id: 'red', color: '#FF453A' },
   { id: 'orange', color: '#FF9500' },
   { id: 'yellow', color: '#FFD60A' },
+  { id: 'lime', color: '#8BC34A' },
   { id: 'green', color: '#30D158' },
   { id: 'teal', color: '#48C9B0' },
-  { id: 'red', color: '#FF453A' },
-  { id: 'pink', color: '#FF375F' },
+  { id: 'cyan', color: '#32ADE6' },
+  { id: 'blue', color: '#0A84FF' },
+  { id: 'indigo', color: '#5856D6' },
   { id: 'purple', color: '#BF5AF2' },
+  { id: 'pink', color: '#FF375F' },
+  { id: 'magenta', color: '#FF2D92' },
+  // Row 2 - Pastels and neutrals
+  { id: 'peach', color: '#FFAB91' },
+  { id: 'cream', color: '#FFE0B2' },
+  { id: 'mint', color: '#A5D6A7' },
+  { id: 'sky', color: '#81D4FA' },
+  { id: 'lavender', color: '#CE93D8' },
+  { id: 'rose', color: '#F48FB1' },
+  { id: 'brown', color: '#A1887F' },
   { id: 'gray', color: '#8E8E93' },
+  { id: 'slate', color: '#546E7A' },
+  { id: 'charcoal', color: '#37474F' },
+  { id: 'white', color: '#FFFFFF' },
+  { id: 'black', color: '#1C1C1E' },
 ]
 
 const LABEL_COLOR_OPTIONS = Object.entries(LABEL_COLORS).map(([id, color]) => ({ id, color }))
+
+// Icon options for folders
+const FOLDER_ICON_OPTIONS = [
+  { id: 'none', icon: null, label: 'None' },
+  { id: 'folder', icon: FolderOpen, label: 'Folder' },
+  { id: 'archive', icon: Archive, label: 'Archive' },
+  { id: 'inbox', icon: Inbox, label: 'Inbox' },
+  { id: 'file', icon: FileText, label: 'Files' },
+  { id: 'heart', icon: Heart, label: 'Heart' },
+  { id: 'star', icon: Star, label: 'Star' },
+  { id: 'calendar', icon: Calendar, label: 'Calendar' },
+  { id: 'globe', icon: Globe, label: 'Globe' },
+  { id: 'bell', icon: Bell, label: 'Bell' },
+  { id: 'book', icon: BookOpen, label: 'Book' },
+  { id: 'music', icon: Music, label: 'Music' },
+  { id: 'camera', icon: Camera, label: 'Camera' },
+  { id: 'film', icon: Film, label: 'Film' },
+  { id: 'coffee', icon: Coffee, label: 'Coffee' },
+  { id: 'zap', icon: Zap, label: 'Zap' },
+  { id: 'bookmark', icon: Bookmark, label: 'Bookmark' },
+  { id: 'award', icon: Award, label: 'Award' },
+  { id: 'flag', icon: Flag, label: 'Flag' },
+  { id: 'home', icon: Home, label: 'Home' },
+  { id: 'briefcase', icon: Briefcase, label: 'Work' },
+  { id: 'graduation', icon: GraduationCap, label: 'School' },
+  { id: 'lightbulb', icon: Lightbulb, label: 'Ideas' },
+  { id: 'target', icon: Target, label: 'Goals' },
+  { id: 'trending', icon: TrendingUp, label: 'Progress' },
+  { id: 'users', icon: Users, label: 'Team' },
+  { id: 'shopping', icon: ShoppingBag, label: 'Shopping' },
+  { id: 'plane', icon: Plane, label: 'Travel' },
+  { id: 'car', icon: Car, label: 'Car' },
+  { id: 'food', icon: Utensils, label: 'Food' },
+  { id: 'fitness', icon: Dumbbell, label: 'Fitness' },
+  { id: 'moon', icon: Moon, label: 'Night' },
+  { id: 'sun', icon: Sun, label: 'Day' },
+  { id: 'cloud', icon: Cloud, label: 'Weather' },
+  { id: 'smile', icon: Smile, label: 'Happy' },
+]
 
 export default function FolderCard({ folder, noteCount = 0, onClick, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -41,6 +98,7 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
   // Get color from folder or default to blue
   const colorKey = folder.colorKey || 'blue'
   const colors = FOLDER_COLORS[colorKey] || FOLDER_COLORS.blue
+  const folderIcon = folder.icon || null
 
   const openMenu = (e) => {
     e.stopPropagation()
@@ -49,7 +107,7 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
       // Position menu to the right of the card
       setMenuPosition({ 
         top: Math.max(100, r.top - 100), 
-        left: Math.min(window.innerWidth - 340, r.right + 10)
+        left: Math.min(window.innerWidth - 360, r.right + 10)
       })
     }
     setMenuOpen(true)
@@ -75,6 +133,9 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
     }
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
+
+  // Get icon component if set
+  const IconComponent = folderIcon ? FOLDER_ICON_OPTIONS.find(i => i.id === folderIcon)?.icon : null
 
   return (
     <div 
@@ -113,6 +174,13 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
             className="absolute top-0 left-0 right-0 h-[2px] rounded-t-md"
             style={{ backgroundColor: colors.light, opacity: 0.8 }}
           />
+          
+          {/* Custom Icon in center */}
+          {IconComponent && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <IconComponent size={24} className="text-white/80" />
+            </div>
+          )}
           
           {/* Favorite star */}
           {folder.pinned && (
@@ -166,9 +234,10 @@ function FolderEditMenu({
   onDelete,
   addToast
 }) {
-  const [activeTab, setActiveTab] = useState('color') // 'color' or 'label'
+  const [activeTab, setActiveTab] = useState('image') // 'image', 'color', 'tag', 'icon'
   const [name, setName] = useState(folder.name || '')
   const [selectedColor, setSelectedColor] = useState(folder.colorKey || 'blue')
+  const [selectedIcon, setSelectedIcon] = useState(folder.icon || 'none')
   const [showNewLabelInput, setShowNewLabelInput] = useState(false)
   const [newLabelName, setNewLabelName] = useState('')
   const [newLabelColor, setNewLabelColor] = useState('blue')
@@ -198,7 +267,20 @@ function FolderEditMenu({
 
   const handleColorSelect = (colorId) => {
     setSelectedColor(colorId)
-    updateFolder(folder.id, { colorKey: colorId })
+    // Map extended palette to folder colors (use closest match)
+    const folderColorMap = {
+      red: 'red', orange: 'orange', yellow: 'yellow', lime: 'green', green: 'green',
+      teal: 'teal', cyan: 'blue', blue: 'blue', indigo: 'purple', purple: 'purple',
+      pink: 'pink', magenta: 'pink', peach: 'orange', cream: 'yellow', mint: 'green',
+      sky: 'blue', lavender: 'purple', rose: 'pink', brown: 'gray', gray: 'gray',
+      slate: 'gray', charcoal: 'gray', white: 'gray', black: 'gray'
+    }
+    updateFolder(folder.id, { colorKey: folderColorMap[colorId] || 'blue' })
+  }
+
+  const handleIconSelect = (iconId) => {
+    setSelectedIcon(iconId)
+    updateFolder(folder.id, { icon: iconId === 'none' ? null : iconId })
   }
 
   const handleLabelToggle = (labelId) => {
@@ -234,11 +316,18 @@ function FolderEditMenu({
     onClose()
   }
 
+  const tabs = [
+    { id: 'image', icon: ImageIcon, label: 'Image' },
+    { id: 'color', icon: Palette, label: 'Color' },
+    { id: 'tag', icon: Tag, label: 'Tag' },
+    { id: 'icon', icon: Grid, label: 'Icon' },
+  ]
+
   return (
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
       <div
-        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[320px] overflow-hidden border border-[#3A3A3C]"
+        className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] w-[340px] overflow-hidden border border-[#3A3A3C]"
         style={{ top: menuPosition.top, left: menuPosition.left }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -262,56 +351,90 @@ function FolderEditMenu({
           </div>
         </div>
 
-        {/* Color/Label Tabs */}
+        {/* 4-Tab Segmented Control */}
         <div className="px-3 pb-2">
           <div className="bg-[#1C1C1E] rounded-xl p-1 flex">
-            <button
-              onClick={() => setActiveTab('color')}
-              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
-                activeTab === 'color' 
-                  ? 'bg-[#3A3A3C] text-white' 
-                  : 'text-[#8E8E93]'
-              }`}
-            >
-              Color
-            </button>
-            <button
-              onClick={() => setActiveTab('label')}
-              className={`flex-1 py-2 rounded-lg text-[15px] font-medium transition-colors ${
-                activeTab === 'label' 
-                  ? 'bg-[#3A3A3C] text-white' 
-                  : 'text-[#8E8E93]'
-              }`}
-            >
-              Label
-            </button>
-          </div>
-
-          {/* Color Options */}
-          {activeTab === 'color' && (
-            <div className="flex items-center justify-center gap-2.5 mt-3 pb-1">
-              {COLOR_OPTIONS.map((opt) => (
+            {tabs.map((tab) => {
+              const TabIcon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
                 <button
-                  key={opt.id}
-                  onClick={() => handleColorSelect(opt.id)}
-                  className="relative w-7 h-7 rounded-full transition-transform hover:scale-110"
-                  style={{ backgroundColor: opt.color }}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-2.5 rounded-lg flex flex-col items-center gap-1 transition-colors ${
+                    isActive 
+                      ? 'bg-[#3A3A3C] text-white' 
+                      : 'text-[#8E8E93] hover:text-white'
+                  }`}
                 >
-                  {selectedColor === opt.id && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Check size={16} className="text-white" strokeWidth={3} />
-                    </div>
+                  {tab.id === 'image' ? (
+                    <TabIcon set="broken" size={20} stroke="regular" primaryColor={isActive ? '#fff' : '#8E8E93'} />
+                  ) : (
+                    <TabIcon size={20} />
                   )}
+                  <span className="text-[11px] font-medium">{tab.label}</span>
                 </button>
-              ))}
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="px-3 pb-2">
+          {/* Image Tab */}
+          {activeTab === 'image' && (
+            <div className="bg-[#1C1C1E] rounded-xl p-4">
+              <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-[#3A3A3C] rounded-xl">
+                <ImageIcon set="broken" size={40} stroke="regular" primaryColor="#8E8E93" />
+                <p className="text-[#8E8E93] text-sm mt-2">Add Cover Image</p>
+                <button className="mt-3 px-4 py-2 bg-[#0A84FF] text-white text-sm font-medium rounded-lg hover:bg-[#0A84FF]/80 transition-colors">
+                  Choose Image
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Label Options - Google Keep Style */}
-          {activeTab === 'label' && (
-            <div className="mt-3 pb-1">
+          {/* Color Tab */}
+          {activeTab === 'color' && (
+            <div className="bg-[#1C1C1E] rounded-xl p-4">
+              {/* Color Grid */}
+              <div className="grid grid-cols-12 gap-2">
+                {COLOR_PALETTE.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleColorSelect(opt.id)}
+                    className={`relative w-6 h-6 rounded-full transition-transform hover:scale-110 ${
+                      opt.id === 'white' ? 'border border-[#3A3A3C]' : ''
+                    }`}
+                    style={{ backgroundColor: opt.color }}
+                  >
+                    {selectedColor === opt.id && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Check size={14} className={opt.id === 'white' || opt.id === 'cream' ? 'text-gray-800' : 'text-white'} strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Opacity Slider (visual only for now) */}
+              <div className="mt-4 pt-3 border-t border-[#3A3A3C]">
+                <div className="flex items-center gap-3">
+                  <span className="text-[#8E8E93] text-sm">Opacity</span>
+                  <div className="flex-1 h-2 bg-gradient-to-r from-transparent to-white rounded-full relative">
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-[#0A84FF]" />
+                  </div>
+                  <span className="text-white text-sm w-10 text-right">100%</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tag Tab */}
+          {activeTab === 'tag' && (
+            <div>
               {/* Existing Labels */}
-              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-[220px] overflow-y-auto">
                 {labels.length > 0 ? (
                   labels.map((label, index) => (
                     <button
@@ -321,33 +444,25 @@ function FolderEditMenu({
                         index < labels.length - 1 ? 'border-b border-[#3A3A3C]' : ''
                       }`}
                     >
-                      {/* Checkbox */}
-                      <div 
-                        className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
-                          folderLabelIds.includes(label.id)
-                            ? 'bg-[#0A84FF] border-[#0A84FF]'
-                            : 'border-[#8E8E93]'
-                        }`}
-                      >
-                        {folderLabelIds.includes(label.id) && (
-                          <Check size={14} className="text-white" strokeWidth={3} />
-                        )}
-                      </div>
-                      
                       {/* Label color dot */}
                       <div 
-                        className="w-3 h-3 rounded-full"
+                        className="w-4 h-4 rounded-full"
                         style={{ backgroundColor: LABEL_COLORS[label.color] }}
                       />
                       
                       {/* Label name */}
                       <span className="text-white text-[15px] flex-1 text-left">{label.name}</span>
+                      
+                      {/* Checkbox */}
+                      {folderLabelIds.includes(label.id) && (
+                        <TickSquare set="bold" size={22} primaryColor="#0A84FF" />
+                      )}
                     </button>
                   ))
                 ) : (
-                  <div className="px-4 py-4 text-center">
-                    <Tag size={24} className="text-[#8E8E93] mx-auto mb-2" />
-                    <p className="text-[#8E8E93] text-sm">No labels yet</p>
+                  <div className="px-4 py-6 text-center">
+                    <Tag size={28} className="text-[#8E8E93] mx-auto mb-2" />
+                    <p className="text-[#8E8E93] text-sm">No tags yet</p>
                   </div>
                 )}
               </div>
@@ -359,7 +474,7 @@ function FolderEditMenu({
                   className="w-full mt-2 px-4 py-3 flex items-center gap-3 bg-[#1C1C1E] rounded-xl hover:bg-[#2A2A2C] transition-colors"
                 >
                   <Plus size={20} className="text-[#0A84FF]" />
-                  <span className="text-[#0A84FF] text-[15px] font-medium">Create new label</span>
+                  <span className="text-[#0A84FF] text-[15px] font-medium">Create new tag</span>
                 </button>
               ) : (
                 <div className="mt-2 bg-[#1C1C1E] rounded-xl p-3">
@@ -373,7 +488,7 @@ function FolderEditMenu({
                       if (e.key === 'Enter') handleCreateLabel()
                       if (e.key === 'Escape') setShowNewLabelInput(false)
                     }}
-                    placeholder="Enter label name"
+                    placeholder="Enter tag name"
                     className="w-full bg-[#2C2C2E] rounded-lg px-3 py-2.5 text-white text-[15px] outline-none placeholder-[#8E8E93] mb-3"
                   />
                   
@@ -418,6 +533,38 @@ function FolderEditMenu({
               )}
             </div>
           )}
+
+          {/* Icon Tab */}
+          {activeTab === 'icon' && (
+            <div className="bg-[#1C1C1E] rounded-xl p-4 max-h-[250px] overflow-y-auto">
+              <div className="grid grid-cols-6 gap-3">
+                {FOLDER_ICON_OPTIONS.map((opt) => {
+                  const IconComp = opt.icon
+                  const isSelected = selectedIcon === opt.id
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => handleIconSelect(opt.id)}
+                      className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                        isSelected 
+                          ? 'bg-[#0A84FF] text-white' 
+                          : 'bg-[#2C2C2E] text-[#8E8E93] hover:bg-[#3A3A3C] hover:text-white'
+                      }`}
+                      title={opt.label}
+                    >
+                      {opt.id === 'none' ? (
+                        <X size={20} />
+                      ) : opt.id === 'star' ? (
+                        <Star set="broken" size={20} stroke="regular" primaryColor={isSelected ? '#fff' : '#8E8E93'} />
+                      ) : IconComp ? (
+                        <IconComp size={20} />
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -458,4 +605,4 @@ function FolderEditMenu({
   )
 }
 
-export { FOLDER_COLORS }
+export { FOLDER_COLORS, FOLDER_ICON_OPTIONS }
