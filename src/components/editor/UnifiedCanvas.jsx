@@ -696,19 +696,6 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
               >
                 <Pencil size={16} />
               </button>
-              <button 
-                onClick={() => setActiveTool('eraser')}
-                className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]"
-              >
-                <Eraser size={16} />
-              </button>
-              <button 
-                onClick={() => setActiveTool('lasso')}
-                className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]"
-              >
-                <Lasso size={16} />
-              </button>
-
               <div className="w-px h-5 bg-[#3A3A3C]" />
 
               {/* Stroke sizes */}
@@ -916,17 +903,13 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowPageSettings(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
             style={{ top: '90px', right: '12px' }}
           >
-            <div className="py-2 text-center border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Page Settings</span>
-            </div>
-
             {/* Template Section */}
-            <div className="p-1.5">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Template</p>
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Template</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                 {['Blank', 'Dotted', 'Grid', 'Lined', 'Margin', 'Cornell'].map((template, index, arr) => {
                   const templateId = template.toLowerCase().replace(' ', '-')
                   const actualTemplateId = templateId === 'margin' ? 'lined-margin' : templateId
@@ -939,18 +922,12 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
                           onPaperTemplateChange(actualTemplateId)
                         }
                       }}
-                      className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] ${
+                      className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors ${
                         index < arr.length - 1 ? 'border-b border-[#3A3A3C]' : ''
                       }`}
                     >
-                      <span className={`text-[15px] flex-1 text-left ${
-                        isActive ? 'text-[#0A84FF]' : 'text-white'
-                      }`}>
-                        {template}
-                      </span>
-                      {isActive && (
-                        <div className="w-2 h-2 rounded-full bg-[#0A84FF]" />
-                      )}
+                      <span className="text-[15px] text-white">{template}</span>
+                      {isActive && <Check size={18} className="text-[#0A84FF]" />}
                     </button>
                   )
                 })}
@@ -958,9 +935,9 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </div>
 
             {/* Paper Color Section */}
-            <div className="px-1.5 pb-1.5">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Paper Color</p>
-              <div className="bg-[#1C1C1E] rounded-lg p-3">
+            <div className="px-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Paper Color</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
                 <div className="flex flex-wrap gap-2">
                   {[
                     { name: 'White', hex: '#FFFFFF' },
@@ -991,16 +968,16 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </div>
 
             {/* Clear Page */}
-            <div className="px-1.5 pb-1.5">
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+            <div className="px-3 pb-3">
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                 <button
                   onClick={() => {
                     clearCanvas()
                     setShowPageSettings(false)
                   }}
-                  className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]"
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors"
                 >
-                  <RotateCcw size={18} className="text-[#FF453A]" />
+                  <RotateCcw size={20} className="text-[#FF453A]" />
                   <span className="text-[15px] text-[#FF453A]">Clear This Page</span>
                 </button>
               </div>
@@ -1014,41 +991,44 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowAccessoriesMenu(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-64 overflow-hidden"
             style={{ top: '90px', left: '50%', marginLeft: '80px', transform: 'translateX(-50%)' }}
           >
-            <div className="py-2 text-center border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Accessories</span>
-            </div>
-            <div className="p-1.5">
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
+            {/* Tools Section */}
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Tools</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
                   <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-[#FF3B30]" />
                   </div>
                   <span className="text-white text-[15px]">Record & Summarize</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Mic size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Mic size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Show Recordings</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <ZoomIn size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <ZoomIn size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Zoom Window</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Ruler size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Ruler size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Ruler</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
-                  <Clock size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Clock size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Time Keeper</span>
                 </button>
               </div>
             </div>
-            <div className="p-1.5 pt-0">
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
+
+            {/* Settings Section */}
+            <div className="px-3 pb-3">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Settings</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Settings size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Toolbar Customization</span>
                 </button>
               </div>
@@ -1062,52 +1042,50 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowAddPageMenu(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
             style={{ top: '90px', right: '76px' }}
           >
-            <div className="py-2 text-center border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Add Page</span>
-            </div>
-            
-            {/* Position tabs */}
-            <div className="flex justify-center gap-2 p-3 border-b border-[#3A3A3C]">
-              <button className="px-4 py-1.5 rounded-lg bg-[#3A3A3C] text-white text-sm">Before</button>
-              <button className="px-4 py-1.5 rounded-lg bg-[#1C1C1E] text-white text-sm">After</button>
-              <button className="px-4 py-1.5 rounded-lg text-[#8E8E93] text-sm hover:bg-[#3A3A3C]">Last Page</button>
+            {/* Position Section */}
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Position</p>
+              <div className="flex gap-2">
+                <button className="flex-1 px-3 py-2 rounded-xl bg-[#0A84FF] text-white text-sm font-medium">Before</button>
+                <button className="flex-1 px-3 py-2 rounded-xl bg-[#1C1C1E] text-white text-sm font-medium hover:bg-[#3A3A3C] transition-colors">After</button>
+                <button className="flex-1 px-3 py-2 rounded-xl bg-[#1C1C1E] text-[#8E8E93] text-sm font-medium hover:bg-[#3A3A3C] transition-colors">Last</button>
+              </div>
             </div>
 
             {/* Recent templates */}
-            <div className="p-3">
-              <p className="text-[13px] font-medium text-white mb-1">Recent templates</p>
-              <p className="text-[11px] text-[#8E8E93] mb-3">Templates shown here inherit current page attributes whenever possible.</p>
-              
-              <div className="bg-[#1C1C1E] rounded-lg p-3 mb-3">
-                <div className="w-16 h-20 bg-[#FFFDE7] rounded border border-[#3A3A3C]" />
+            <div className="px-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Recent Templates</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
+                <div className="w-16 h-20 bg-[#FFFDE7] rounded-lg border border-[#3A3A3C]" />
                 <p className="text-[11px] text-[#8E8E93] mt-2">Current Template</p>
               </div>
             </div>
 
             {/* Options */}
-            <div className="p-1.5 pt-0">
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <FileText size={18} className="text-[#8E8E93]" />
+            <div className="px-3 pb-3">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Add From</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <FileText size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">More from Templates...</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Image size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Image size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Image</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <ScanLine size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <ScanLine size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Scan Documents</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Camera size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Camera size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Take Photo</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
-                  <Download size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Download size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Import</span>
                 </button>
               </div>
@@ -1121,19 +1099,15 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowShareMenu(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-72 overflow-hidden"
             style={{ top: '90px', right: '44px' }}
           >
-            <div className="py-2 text-center border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Share and Export</span>
-            </div>
-            
             {/* Collaboration */}
-            <div className="p-1.5">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Collaboration</p>
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
-                  <Share2 size={18} className="text-[#8E8E93]" />
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Collaboration</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Share2 size={20} className="text-[#8E8E93]" />
                   <div className="flex-1 text-left">
                     <span className="text-white text-[15px]">Share...</span>
                     <p className="text-[11px] text-[#8E8E93]">Invite, view collaborators</p>
@@ -1143,45 +1117,45 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </div>
 
             {/* Export */}
-            <div className="p-1.5 pt-0">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Export</p>
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Upload size={18} className="text-[#8E8E93]" />
+            <div className="px-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Export</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Upload size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Export This Page</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Upload size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Upload size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Export All</span>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
-                  <Printer size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Printer size={20} className="text-[#8E8E93]" />
                   <span className="text-white text-[15px]">Print</span>
                 </button>
               </div>
             </div>
 
             {/* Presentation Mode */}
-            <div className="p-1.5 pt-0">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Presentation Mode</p>
-              <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Monitor size={18} className="text-[#8E8E93]" />
+            <div className="px-3 pb-3">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Presentation Mode</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Monitor size={20} className="text-[#8E8E93]" />
                   <div className="flex-1 text-left">
                     <span className="text-white text-[15px]">Mirror Entire Screen</span>
                     <p className="text-[11px] text-[#8E8E93]">Audience sees what presenter sees</p>
                   </div>
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]">
-                  <Monitor size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
+                  <Monitor size={20} className="text-[#8E8E93]" />
                   <div className="flex-1 text-left">
                     <span className="text-white text-[15px]">Mirror Presenter Page</span>
                     <p className="text-[11px] text-[#8E8E93]">Audience doesn't see the interface</p>
                   </div>
                   <Check size={18} className="text-[#0A84FF]" />
                 </button>
-                <button className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]">
-                  <Monitor size={18} className="text-[#8E8E93]" />
+                <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors">
+                  <Monitor size={20} className="text-[#8E8E93]" />
                   <div className="flex-1 text-left">
                     <span className="text-white text-[15px]">Mirror Full Page</span>
                     <p className="text-[11px] text-[#8E8E93]">Audience doesn't see interface & zoom</p>
@@ -1198,38 +1172,43 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowElementsPanel(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
             style={{ top: '90px', left: '50%', transform: 'translateX(-50%)' }}
           >
-            <div className="flex items-center justify-between py-2 px-4 border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Recents</span>
-              <button className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
-                <PanelLeft size={18} />
-              </button>
-            </div>
-            
-            <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
-              <div className="w-12 h-12 rounded-full border-2 border-[#3A3A3C] flex items-center justify-center mb-3">
-                <Smile size={24} className="text-[#8E8E93]" />
+            {/* Recent Elements Section */}
+            <div className="p-3 pb-2">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide">Recent Elements</p>
+                <button className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C] transition-colors">
+                  <PanelLeft size={16} />
+                </button>
               </div>
-              <p className="text-white font-medium text-[15px]">No Recent Elements</p>
-              <p className="text-[#8E8E93] text-[13px] text-center mt-1">After you inserted or created an element, it will appear here.</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-6 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full border-2 border-[#3A3A3C] flex items-center justify-center mb-3">
+                  <Smile size={24} className="text-[#8E8E93]" />
+                </div>
+                <p className="text-white font-medium text-[15px]">No Recent Elements</p>
+                <p className="text-[#8E8E93] text-[13px] text-center mt-1">After you inserted or created an element, it will appear here.</p>
+              </div>
             </div>
 
-            {/* Category tabs */}
-            <div className="flex justify-center gap-2 p-3 border-t border-[#3A3A3C]">
-              <button className="w-10 h-10 rounded-xl bg-[#0A84FF] flex items-center justify-center">
-                <Clock size={20} className="text-white" />
-              </button>
-              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
-                <span className="text-xl leading-none">📝</span>
-              </button>
-              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
-                <span className="text-xl leading-none">🏈</span>
-              </button>
-              <button className="w-10 h-10 rounded-xl bg-[#3A3A3C] flex items-center justify-center">
-                <span className="text-xl leading-none">📅</span>
-              </button>
+            {/* Category Section */}
+            <div className="px-3 pb-3">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Categories</p>
+              <div className="flex justify-center gap-2">
+                <button className="w-10 h-10 rounded-xl bg-[#0A84FF] flex items-center justify-center">
+                  <Clock size={20} className="text-white" />
+                </button>
+                <button className="w-10 h-10 rounded-xl bg-[#1C1C1E] flex items-center justify-center hover:bg-[#3A3A3C] transition-colors">
+                  <span className="text-xl leading-none">📝</span>
+                </button>
+                <button className="w-10 h-10 rounded-xl bg-[#1C1C1E] flex items-center justify-center hover:bg-[#3A3A3C] transition-colors">
+                  <span className="text-xl leading-none">🏈</span>
+                </button>
+                <button className="w-10 h-10 rounded-xl bg-[#1C1C1E] flex items-center justify-center hover:bg-[#3A3A3C] transition-colors">
+                  <span className="text-xl leading-none">📅</span>
+                </button>
+              </div>
             </div>
           </div>
         </>
@@ -1240,31 +1219,30 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowImageMenu(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] w-80 overflow-hidden"
             style={{ top: '90px', left: '50%', transform: 'translateX(-50%)' }}
           >
-            <div className="flex items-center justify-between py-2 px-4 border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Images</span>
-              <button className="p-1 rounded-md text-[#0A84FF] hover:bg-[#3A3A3C]">
-                <Camera size={18} />
-              </button>
-            </div>
-            
-            {/* Image grid placeholder */}
-            <div className="p-3 grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-              {[...Array(12)].map((_, i) => (
-                <div 
-                  key={i}
-                  className="aspect-square bg-[#3A3A3C] rounded-lg"
-                />
-              ))}
+            {/* Recent Images Section */}
+            <div className="p-3 pb-2">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide">Recent Images</p>
+                <button className="p-1 rounded-md text-[#0A84FF] hover:bg-[#3A3A3C] transition-colors">
+                  <Camera size={16} />
+                </button>
+              </div>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
+                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                  {[...Array(12)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className="aspect-square bg-[#3A3A3C] rounded-lg hover:bg-[#4A4A4C] transition-colors cursor-pointer"
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="p-3 border-t border-[#3A3A3C]">
-              <button className="w-full py-2 text-[#0A84FF] text-[15px] hover:bg-[#3A3A3C] rounded-lg">
-                Insert from...
-              </button>
-            </div>
+
           </div>
         </>
       )}
@@ -1274,20 +1252,17 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowColorPicker(false)} />
           <div 
-            className="fixed z-50 bg-[#2C2C2E] rounded-xl shadow-xl border border-[#3A3A3C] overflow-hidden w-56"
+            className="fixed z-50 bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] overflow-hidden w-56"
             style={{ 
               top: showToolOptionsBar ? '134px' : '90px',
               left: '50%',
               transform: 'translateX(-50%)'
             }}
           >
-            <div className="py-2 text-center border-b border-[#3A3A3C]">
-              <span className="text-white font-medium text-[15px]">Color</span>
-            </div>
-            
-            <div className="p-1.5">
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Basic</p>
-              <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+            {/* Basic Colors */}
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Basic</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
                 <div className="flex gap-2 justify-center">
                   {COLORS.basic.map(color => (
                     <button
@@ -1299,9 +1274,12 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
                   ))}
                 </div>
               </div>
-              
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Vivid</p>
-              <div className="bg-[#1C1C1E] rounded-lg p-2.5 mb-1.5">
+            </div>
+            
+            {/* Vivid Colors */}
+            <div className="px-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Vivid</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
                 <div className="flex gap-2 flex-wrap justify-center">
                   {COLORS.vivid.map(color => (
                     <button
@@ -1313,9 +1291,12 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
                   ))}
                 </div>
               </div>
-              
-              <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Pastel</p>
-              <div className="bg-[#1C1C1E] rounded-lg p-2.5">
+            </div>
+            
+            {/* Pastel Colors */}
+            <div className="px-3 pb-3">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Pastel</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3">
                 <div className="flex gap-2 justify-center">
                   {COLORS.pastel.map(color => (
                     <button
@@ -1336,81 +1317,101 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
       <div className="flex-1 flex overflow-hidden">
         {/* Pages Panel (Left Sidebar) */}
         {showPagesPanel && (
-          <div className="w-64 bg-[#1C1C1E] border-r border-[#3A3A3C] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-[#3A3A3C]">
+          <div className="w-64 bg-[#2C2C2E] border-r border-[#3A3A3C] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#3A3A3C]">
               <div className="flex items-center gap-2">
-                <button className="text-[#8E8E93] hover:text-white">•••</button>
-                <span className="text-white font-medium">Pages</span>
+                <button className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C] transition-colors">
+                  <Settings size={16} />
+                </button>
               </div>
               <button 
                 onClick={() => setShowPagesPanel(false)}
-                className="text-[#8E8E93] hover:text-white"
+                className="p-1 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C] transition-colors"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Page view tabs */}
-            <div className="flex items-center justify-center gap-1 p-2 border-b border-[#3A3A3C]">
-              <button className="p-1.5 rounded-md bg-[#3A3A3C] text-white">
-                <FileText size={16} />
-              </button>
-              <button className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
-                <Layout size={16} />
-              </button>
-              <button className="p-1.5 rounded-md text-[#8E8E93] hover:bg-[#3A3A3C]">
-                <Mic size={16} />
-              </button>
+            {/* View Mode Section */}
+            <div className="p-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">View Mode</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-1 flex">
+                <button className="flex-1 p-2 rounded-lg bg-[#3A3A3C] text-white flex items-center justify-center gap-1.5 transition-colors">
+                  <FileText size={16} />
+                  <span className="text-[12px]">Pages</span>
+                </button>
+                <button className="flex-1 p-2 rounded-lg text-[#8E8E93] hover:text-white flex items-center justify-center gap-1.5 transition-colors">
+                  <Layout size={16} />
+                  <span className="text-[12px]">Grid</span>
+                </button>
+                <button className="flex-1 p-2 rounded-lg text-[#8E8E93] hover:text-white flex items-center justify-center gap-1.5 transition-colors">
+                  <Mic size={16} />
+                  <span className="text-[12px]">Audio</span>
+                </button>
+              </div>
             </div>
 
-            {/* Filter */}
-            <div className="px-3 py-2">
-              <button className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#3A3A3C] text-white text-sm">
-                All Pages
-                <ChevronDown size={14} />
-              </button>
+            {/* Filter Section */}
+            <div className="px-3 pb-2">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Filter</p>
+              <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                <button className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors">
+                  <span className="text-white text-[15px]">All Pages</span>
+                  <ChevronDown size={16} className="text-[#8E8E93]" />
+                </button>
+              </div>
             </div>
 
-            {/* Pages grid */}
-            <div className="flex-1 overflow-y-auto p-3">
-              <div className="grid grid-cols-2 gap-3">
-                {pages.map((page, index) => (
-                  <div
-                    key={page.id}
-                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 ${
-                      currentPage === page.id ? 'border-[#0A84FF]' : 'border-transparent'
-                    }`}
-                    onClick={() => setCurrentPage(page.id)}
-                  >
-                    <div 
-                      className={`aspect-[3/4] ${
-                        page.isCover ? 'bg-gradient-to-b from-cyan-400 to-cyan-600' : 'bg-[#FFFDE7]'
+            {/* Pages Grid Section */}
+            <div className="px-3 pb-3 flex-1 overflow-hidden flex flex-col">
+              <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">Pages</p>
+              <div className="bg-[#1C1C1E] rounded-xl p-3 flex-1 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3">
+                  {pages.map((page, index) => (
+                    <div
+                      key={page.id}
+                      className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${
+                        currentPage === page.id ? 'border-[#0A84FF]' : 'border-transparent hover:border-[#3A3A3C]'
                       }`}
+                      onClick={() => setCurrentPage(page.id)}
                     >
-                      {page.isCover && (
-                        <div className="absolute right-1 top-1/2 w-1 h-8 bg-cyan-700 rounded-l" />
-                      )}
+                      <div 
+                        className={`aspect-[3/4] ${
+                          page.isCover ? 'bg-gradient-to-b from-cyan-400 to-cyan-600' : 'bg-[#FFFDE7]'
+                        }`}
+                      >
+                        {page.isCover && (
+                          <div className="absolute right-1 top-1/2 w-1 h-8 bg-cyan-700 rounded-l" />
+                        )}
+                      </div>
+                      <div className="absolute top-1.5 right-1.5">
+                        <Bookmark size={14} className="text-[#8E8E93]" />
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm px-2 py-1.5 flex items-center justify-between">
+                        <span className="text-[11px] text-white font-medium">{index + 1}</span>
+                        <button 
+                          className="p-0.5 rounded text-[#8E8E93] hover:text-white transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ChevronDown size={12} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="absolute top-1 right-1">
-                      <Bookmark size={14} className="text-[#8E8E93]" />
-                    </div>
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-[11px] text-[#8E8E93]">{index + 1}</span>
-                      <ChevronDown size={12} className="text-[#8E8E93]" />
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
-                {/* Add page button */}
-                <div 
-                  className="aspect-[3/4] border-2 border-dashed border-[#3A3A3C] rounded-lg flex items-center justify-center cursor-pointer hover:border-[#0A84FF] transition-colors"
-                  onClick={() => {
-                    const newPage = { id: pages.length + 1, thumbnail: null, isCover: false }
-                    setPages([...pages, newPage])
-                    setTotalPages(totalPages + 1)
-                  }}
-                >
-                  <Plus size={24} className="text-[#0A84FF]" />
+                  {/* Add page button */}
+                  <div 
+                    className="aspect-[3/4] border-2 border-dashed border-[#3A3A3C] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#0A84FF] hover:bg-[#0A84FF]/10 transition-all"
+                    onClick={() => {
+                      const newPage = { id: pages.length + 1, thumbnail: null, isCover: false }
+                      setPages([...pages, newPage])
+                      setTotalPages(totalPages + 1)
+                    }}
+                  >
+                    <Plus size={24} className="text-[#0A84FF]" />
+                    <span className="text-[11px] text-[#0A84FF] mt-1">Add Page</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1420,7 +1421,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         {/* Canvas Area */}
         <div 
           ref={containerRef} 
-          className="flex-1 relative overflow-auto"
+          className="flex-1 relative overflow-auto bg-[#1C1C1E]"
           onClick={() => { setShowColorPicker(false) }}
         >
           <canvas

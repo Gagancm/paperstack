@@ -1,8 +1,8 @@
-import { useAppStore, LABEL_COLORS } from '../../store/appStore'
+import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES } from '../../store/appStore'
 import FolderCard from './FolderCard'
 import NoteCard from './NoteCard'
-import { Star } from 'react-iconly'
-import { ChevronDown } from 'lucide-react'
+import { Star, Document } from 'react-iconly'
+import { ChevronDown, Layout, FileText } from 'lucide-react'
 
 export default function NotesList() {
   const {
@@ -17,6 +17,7 @@ export default function NotesList() {
     getNotesCountByFolder,
     viewMode,
     labels,
+    activeDocumentType,
   } = useAppStore()
   
   const filteredNotes = getFilteredNotes()
@@ -59,6 +60,9 @@ export default function NotesList() {
       .slice(0, 3) // Show max 3 labels
   }
 
+  // Get document type info for empty state
+  const docTypeInfo = DOCUMENT_TYPES[activeDocumentType] || DOCUMENT_TYPES.notebook
+
   return (
     <div className="flex-1 overflow-y-auto bg-[#1C1C1E]">
       <div className="py-6 px-[30px]">
@@ -99,7 +103,7 @@ export default function NotesList() {
             {/* Notes Section */}
             {filteredNotes.length > 0 && (
               <div>
-                {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">Notes</h3>}
+                {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{docTypeInfo.label}</h3>}
                 {viewMode === 'grid' ? (
                   <div className="flex flex-wrap gap-4">
                     {filteredNotes.map((note) => (
@@ -133,12 +137,12 @@ export default function NotesList() {
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="text-5xl mb-4">📂</div>
                 <h3 className="text-lg font-semibold text-white mb-2">This folder is empty</h3>
-                <p className="text-[#8E8E93] text-sm">Create a new note or move existing notes here</p>
+                <p className="text-[#8E8E93] text-sm">Create a new {docTypeInfo.label.toLowerCase().slice(0, -1)} or move existing ones here</p>
               </div>
             )}
           </div>
         ) : (
-          <EmptyState />
+          <EmptyState docType={docTypeInfo} />
         )}
       </div>
     </div>
@@ -147,6 +151,20 @@ export default function NotesList() {
 
 // List view item for notes
 function NoteListItem({ note, onClick, isSelected, formatDate, labelObjects }) {
+  const documentType = note.documentType || 'notebook'
+  
+  // Get document type icon
+  const getDocTypeIcon = () => {
+    switch (documentType) {
+      case 'whiteboard':
+        return <Layout size={14} className="text-[#BF5AF2]" />
+      case 'document':
+        return <FileText size={14} className="text-[#30D158]" />
+      default:
+        return <Document set="broken" size={14} stroke="regular" primaryColor="#0A84FF" />
+    }
+  }
+
   return (
     <div
       onClick={onClick}
@@ -163,6 +181,7 @@ function NoteListItem({ note, onClick, isSelected, formatDate, labelObjects }) {
       {/* Note info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
+          <span className="flex-shrink-0">{getDocTypeIcon()}</span>
           <p className="text-white font-medium text-[15px] truncate">
             {note.title || 'Untitled'}
           </p>
@@ -259,13 +278,28 @@ function FolderListItem({ folder, noteCount, onClick, formatDate }) {
   )
 }
 
-function EmptyState() {
+function EmptyState({ docType }) {
+  // Get appropriate icon based on document type
+  const getIcon = () => {
+    switch (docType.id) {
+      case 'whiteboard':
+        return '🎨'
+      case 'document':
+        return '📄'
+      default:
+        return '📓'
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-6xl mb-6">📝</div>
-      <h2 className="text-xl font-bold text-white mb-2">No notes yet</h2>
+      <div className="text-6xl mb-6">{getIcon()}</div>
+      <h2 className="text-xl font-bold text-white mb-2">No {docType.label.toLowerCase()} yet</h2>
       <p className="text-[#8E8E93] text-sm max-w-xs">
-        Tap the + New button to create your first note or folder
+        Tap the + New button to create your first {docType.label.toLowerCase().slice(0, -1)}
+      </p>
+      <p className="text-[#636366] text-xs mt-2 max-w-xs">
+        {docType.description}
       </p>
     </div>
   )

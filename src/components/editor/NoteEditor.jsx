@@ -133,45 +133,42 @@ export default function NoteEditor({ onClose }) {
             {showLabelPicker && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowLabelPicker(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-xl shadow-xl z-50 w-64 max-h-[80vh] overflow-y-auto border border-[#3A3A3C]">
-                  {/* Header */}
-                  <div className="py-2 text-center border-b border-[#3A3A3C] sticky top-0 bg-[#2C2C2E] rounded-t-xl">
-                    <span className="text-white font-medium text-[15px]">Labels</span>
-                  </div>
-
-                  {/* Labels List */}
-                  <div className="p-1.5">
-                    <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-64 overflow-hidden border border-[#3A3A3C]">
+                  {/* Labels Section */}
+                  <div className="p-3">
+                    <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                      Labels
+                    </p>
+                    <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                       {labels.length > 0 ? (
-                        <div className="max-h-64 overflow-y-auto">
-                          {labels.map((label, index) => (
-                            <button
-                              key={label.id}
-                              onClick={() => {
-                                if (note.labels.includes(label.id)) {
-                                  removeLabelFromNote(note.id, label.id)
-                                } else {
-                                  addLabelToNote(note.id, label.id)
-                                }
-                              }}
-                              className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] ${
-                                index < labels.length - 1 ? 'border-b border-[#3A3A3C]' : ''
-                              }`}
-                            >
-                              <div
-                                className="w-4 h-4 rounded-full shrink-0"
-                                style={{ backgroundColor: LABEL_COLORS[label.color] }}
-                              />
-                              <span className="flex-1 text-left text-[15px] text-white">{label.name}</span>
-                              {note.labels.includes(label.id) && (
-                                <TickSquare set="broken" size={18} stroke="regular" primaryColor="#0A84FF" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
+                        labels.map((label, index) => (
+                          <button
+                            key={label.id}
+                            onClick={() => {
+                              if (note.labels.includes(label.id)) {
+                                removeLabelFromNote(note.id, label.id)
+                              } else {
+                                addLabelToNote(note.id, label.id)
+                              }
+                            }}
+                            className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors ${
+                              index < labels.length - 1 ? 'border-b border-[#3A3A3C]' : ''
+                            }`}
+                          >
+                            <div
+                              className="w-4 h-4 rounded-full shrink-0"
+                              style={{ backgroundColor: LABEL_COLORS[label.color] }}
+                            />
+                            <span className="flex-1 text-left text-[15px] text-white">{label.name}</span>
+                            {note.labels.includes(label.id) && (
+                              <TickSquare set="bold" size={20} primaryColor="#0A84FF" />
+                            )}
+                          </button>
+                        ))
                       ) : (
-                        <div className="px-3 py-4 text-center text-[13px] text-[#8E8E93]">
-                          No labels yet
+                        <div className="px-4 py-6 text-center">
+                          <Tag size={24} className="text-[#8E8E93] mx-auto mb-2" />
+                          <p className="text-[#8E8E93] text-sm">No labels yet</p>
                         </div>
                       )}
                     </div>
@@ -192,114 +189,101 @@ export default function NoteEditor({ onClose }) {
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-xl shadow-xl z-50 w-64 max-h-[80vh] overflow-y-auto border border-[#3A3A3C]">
-                  {/* Header */}
-                  <div className="py-2 text-center border-b border-[#3A3A3C] sticky top-0 bg-[#2C2C2E] rounded-t-xl">
-                    <span className="text-white font-medium text-[15px]">More</span>
-                  </div>
-
-                  {/* Page Actions */}
-                  <div className="p-1.5">
-                    <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-72 max-h-[80vh] overflow-y-auto border border-[#3A3A3C]">
+                  {/* Page Actions Section */}
+                  <div className="p-3 pb-2">
+                    <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                      Page Actions
+                    </p>
+                    <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                       {/* Add to Favorites */}
                       <button
                         onClick={() => { togglePinNote(note.id); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Bookmark set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                        <Bookmark set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                         <span className="text-[15px]">{note.pinned ? 'Remove from Favorites' : 'Add to Favorites'}</span>
                       </button>
 
                       {/* Copy Page */}
                       <button
                         onClick={() => { duplicateNote(note.id); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Copy size={18} className="text-[#8E8E93]" />
+                        <Copy size={20} className="text-[#8E8E93]" />
                         <span className="text-[15px]">Copy Page</span>
                       </button>
 
                       {/* Rotate Page */}
                       <button
                         onClick={() => { addToast({ message: 'Rotate coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center justify-between text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center justify-between text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
                         <div className="flex items-center gap-3">
-                          <Swap set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                          <Swap set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                           <span className="text-[15px]">Rotate Page</span>
                         </div>
-                        <ChevronRight set="broken" size={16} stroke="regular" primaryColor="#8E8E93" />
+                        <ChevronRight set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
                       </button>
 
                       {/* Add Page to Outline */}
                       <button
                         onClick={() => { addToast({ message: 'Outline coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors"
                       >
-                        <ListTree size={18} className="text-[#8E8E93]" />
+                        <ListTree size={20} className="text-[#8E8E93]" />
                         <span className="text-[15px]">Add Page to Outline</span>
                       </button>
+                    </div>
+                  </div>
 
-                      {/* Change Template */}
-                      <button
-                        onClick={() => { setShowMenu(false); setShowPageSettings(true) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
-                      >
-                        <Setting set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
-                        <span className="text-[15px]">Change Template</span>
-                      </button>
-
-                      {/* Go to Page */}
-                      <button
-                        onClick={() => { addToast({ message: 'Go to Page coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center justify-between text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Send set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
-                          <span className="text-[15px]">Go to Page</span>
-                        </div>
-                        <span className="text-[13px] text-[#8E8E93]">(1 - 1)</span>
-                      </button>
-
+                  {/* Danger Zone Section */}
+                  <div className="px-3 pb-2">
+                    <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                      Danger Zone
+                    </p>
+                    <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                       {/* Clear Page */}
                       <button
                         onClick={() => { addToast({ message: 'Page cleared' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Trash2 size={18} className="text-[#FF9500]" />
+                        <Trash2 size={20} className="text-[#FF9500]" />
                         <span className="text-[15px] text-[#FF9500]">Clear Page</span>
                       </button>
 
                       {/* Move Page to Trash */}
                       <button
                         onClick={handleDelete}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-[#2A2A2C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors"
                       >
-                        <Delete set="broken" size={18} stroke="regular" primaryColor="#FF453A" />
+                        <Delete set="broken" size={20} stroke="regular" primaryColor="#FF453A" />
                         <span className="text-[15px] text-[#FF453A]">Move Page to Trash</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Settings Section */}
-                  <div className="px-1.5 pb-1.5">
-                    <p className="text-[11px] text-[#8E8E93] uppercase tracking-wide px-2 py-1.5">Settings</p>
-                    <div className="bg-[#1C1C1E] rounded-lg overflow-hidden">
+                  <div className="px-3 pb-3">
+                    <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                      Settings
+                    </p>
+                    <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
                       {/* Add Lock */}
                       <button
                         onClick={() => { addToast({ message: 'Lock coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Lock set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                        <Lock set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                         <span className="text-[15px]">Add Lock</span>
                       </button>
 
                       {/* Show Resolved Comments */}
                       <button
                         onClick={() => { addToast({ message: 'Comments coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Message set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                        <Message set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                         <span className="text-[15px] flex-1 text-left">Show Resolved Comments</span>
                         <div className="w-10 h-6 bg-[#3A3A3C] rounded-full relative flex-shrink-0">
                           <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow" />
@@ -309,9 +293,9 @@ export default function NoteEditor({ onClose }) {
                       {/* Scrolling Direction */}
                       <button
                         onClick={() => { addToast({ message: 'Scroll direction coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <MoveHorizontal size={18} className="text-[#8E8E93]" />
+                        <MoveHorizontal size={20} className="text-[#8E8E93]" />
                         <span className="text-[15px] flex-1 text-left">Scrolling Direction</span>
                         <span className="text-[13px] text-[#8E8E93]">Vertical</span>
                       </button>
@@ -319,9 +303,9 @@ export default function NoteEditor({ onClose }) {
                       {/* Sidebar */}
                       <button
                         onClick={() => { addToast({ message: 'Sidebar coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <PanelLeft size={18} className="text-[#8E8E93]" />
+                        <PanelLeft size={20} className="text-[#8E8E93]" />
                         <span className="text-[15px] flex-1 text-left">Sidebar</span>
                         <span className="text-[13px] text-[#8E8E93]">Left</span>
                       </button>
@@ -329,24 +313,22 @@ export default function NoteEditor({ onClose }) {
                       {/* Stylus & Palm Rejection */}
                       <button
                         onClick={() => { addToast({ message: 'Stylus settings coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C] border-b border-[#3A3A3C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                       >
-                        <Edit set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                        <Edit set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                         <span className="text-[15px]">Stylus & Palm Rejection</span>
                       </button>
 
                       {/* Document Editing */}
                       <button
                         onClick={() => { addToast({ message: 'Document editing coming soon' }); setShowMenu(false) }}
-                        className="w-full px-3 py-2.5 flex items-center gap-3 text-white hover:bg-[#2A2A2C]"
+                        className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors"
                       >
-                        <SlidersHorizontal size={18} className="text-[#8E8E93]" />
+                        <SlidersHorizontal size={20} className="text-[#8E8E93]" />
                         <span className="text-[15px]">Document Editing</span>
                       </button>
                     </div>
                   </div>
-
-
                 </div>
               </>
             )}
@@ -388,46 +370,56 @@ function FolderPicker({ currentFolderId, folders, onSelect, onClose }) {
     <>
       <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#3A3A3C]">
-            <h3 className="text-lg font-semibold text-white">Move to Folder</h3>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
+        <div className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto border border-[#3A3A3C] overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#3A3A3C]">
+            <h3 className="text-[17px] font-semibold text-white">Move to Folder</h3>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]">
               <CloseSquare set="broken" size={20} stroke="regular" />
             </button>
           </div>
           
-          <div className="max-h-80 overflow-y-auto">
-            <button
-              onClick={() => onSelect(null)}
-              className={`w-full px-5 py-4 flex items-center gap-3 hover:bg-[#3A3A3C] ${!currentFolderId ? 'text-[#0A84FF]' : 'text-white'}`}
-            >
-              <span className="text-2xl">📄</span>
-              <span className="flex-1 text-left">No Folder</span>
-              {!currentFolderId && <TickSquare set="broken" size={20} stroke="regular" primaryColor="#0A84FF" />}
-            </button>
-            
-            <div className="h-px bg-[#3A3A3C]" />
-            
-            {folders.map((folder) => (
+          {/* Folders List */}
+          <div className="p-3">
+            <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-80 overflow-y-auto">
+              {/* No Folder Option */}
               <button
-                key={folder.id}
-                onClick={() => onSelect(folder.id)}
-                className={`w-full px-5 py-4 flex items-center gap-3 hover:bg-[#3A3A3C] ${currentFolderId === folder.id ? 'text-[#0A84FF]' : 'text-white'}`}
+                onClick={() => onSelect(null)}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
               >
-                <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
-                  style={{ background: folder.gradient || folder.color }}
-                >
-                  {folder.icon || '📁'}
-                </div>
-                <span className="flex-1 text-left">{folder.name}</span>
-                {currentFolderId === folder.id && <TickSquare set="broken" size={20} stroke="regular" primaryColor="#0A84FF" />}
+                <span className="text-xl">📄</span>
+                <span className="flex-1 text-left text-[15px] text-white">No Folder</span>
+                {!currentFolderId && <TickSquare set="bold" size={20} primaryColor="#0A84FF" />}
               </button>
-            ))}
-            
-            {folders.length === 0 && (
-              <div className="px-5 py-8 text-center text-[#8E8E93]">No folders yet</div>
-            )}
+              
+              {/* Folder Options */}
+              {folders.map((folder, index) => (
+                <button
+                  key={folder.id}
+                  onClick={() => onSelect(folder.id)}
+                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors ${
+                    index < folders.length - 1 ? 'border-b border-[#3A3A3C]' : ''
+                  }`}
+                >
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+                    style={{ background: folder.gradient || folder.color }}
+                  >
+                    {folder.icon || '📁'}
+                  </div>
+                  <span className="flex-1 text-left text-[15px] text-white">{folder.name}</span>
+                  {currentFolderId === folder.id && <TickSquare set="bold" size={20} primaryColor="#0A84FF" />}
+                </button>
+              ))}
+              
+              {/* Empty State */}
+              {folders.length === 0 && (
+                <div className="px-4 py-8 text-center">
+                  <span className="text-2xl block mb-2">📁</span>
+                  <p className="text-[#8E8E93] text-sm">No folders yet</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

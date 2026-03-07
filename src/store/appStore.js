@@ -13,6 +13,13 @@ export const LABEL_COLORS = {
   gray: '#8E8E93',
 }
 
+// Document types for sidebar tabs
+export const DOCUMENT_TYPES = {
+  notebook: { id: 'notebook', label: 'Notebooks', icon: '📓', description: 'Fixed pages with drawing + text' },
+  whiteboard: { id: 'whiteboard', label: 'Whiteboard', icon: '⬜', description: 'Infinite canvas for mind maps' },
+  document: { id: 'document', label: 'Documents', icon: '📄', description: 'Typing-focused text documents' },
+}
+
 // Initial demo labels
 const initialLabels = [
   { id: 'l1', name: 'Work', color: 'blue' },
@@ -42,6 +49,7 @@ export const useAppStore = create(
       theme: 'dark', // 'light', 'dark', or 'system'
       editorMode: 'type', // 'type' or 'draw'
       defaultPenTool: 'ballpoint',
+      activeDocumentType: 'notebook', // 'notebook', 'whiteboard', 'document'
 
       // Notes state
       notes: [],
@@ -76,18 +84,26 @@ export const useAppStore = create(
       setTheme: (theme) => set({ theme }),
       setEditorMode: (mode) => set({ editorMode: mode }),
       setDefaultPenTool: (tool) => set({ defaultPenTool: tool }),
+      setActiveDocumentType: (type) => set({ activeDocumentType: type, selectedFolderId: null }),
 
       // Actions - Notes
-      createNote: () => {
+      createNote: (documentType = 'notebook') => {
+        const typeLabels = {
+          notebook: 'Untitled Notebook',
+          whiteboard: 'Untitled Whiteboard',
+          document: 'Untitled Document',
+        }
         const newNote = {
           id: generateId(),
-          title: 'Untitled Notebook',
+          title: typeLabels[documentType] || 'Untitled',
           content: '',
           labels: [],
           pinned: false,
           hasDrawing: false,
           drawingData: null,
           inTrash: false,
+          // Document type
+          documentType: documentType,
           // Color key for notebook
           colorKey: 'blue',
           // Paper settings
@@ -316,7 +332,14 @@ export const useAppStore = create(
         const state = get()
         let filtered = state.notes
 
-        // Filter by folder first
+        // Filter by document type
+        if (state.activeDocumentType) {
+          filtered = filtered.filter((note) => 
+            (note.documentType || 'notebook') === state.activeDocumentType
+          )
+        }
+
+        // Filter by folder
         if (state.selectedFolderId) {
           filtered = filtered.filter((note) => note.folderId === state.selectedFolderId)
         }
@@ -394,6 +417,13 @@ export const useAppStore = create(
         ).length
       },
 
+      getNotesCountByDocumentType: (documentType) => {
+        const state = get()
+        return state.notes.filter(
+          (note) => !note.inTrash && (note.documentType || 'notebook') === documentType
+        ).length
+      },
+
       getFilteredFolders: () => {
         const state = get()
         let filtered = [...state.folders]
@@ -468,6 +498,7 @@ export const useAppStore = create(
         viewMode: state.viewMode,
         sortBy: state.sortBy,
         defaultPenTool: state.defaultPenTool,
+        activeDocumentType: state.activeDocumentType,
       }),
     }
   )

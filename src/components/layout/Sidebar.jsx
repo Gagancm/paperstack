@@ -1,4 +1,5 @@
-import { Folder, Star, Delete } from 'react-iconly'
+import { Folder, Star, Delete, Document } from 'react-iconly'
+import { FileText, Layout } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
 export default function Sidebar() {
@@ -6,15 +7,29 @@ export default function Sidebar() {
     sidebarOpen, 
     activeFilter,
     setActiveFilter,
+    activeDocumentType,
+    setActiveDocumentType,
     labels,
     notes,
+    getNotesCountByDocumentType,
   } = useAppStore()
 
+  const notebooksCount = getNotesCountByDocumentType('notebook')
+  const whiteboardCount = getNotesCountByDocumentType('whiteboard')
+  const documentsCount = getNotesCountByDocumentType('document')
   const favoritesCount = notes.filter(n => n.pinned && !n.inTrash).length
   const trashCount = notes.filter(n => n.inTrash).length
 
   // Don't render if sidebar is closed
   if (!sidebarOpen) return null
+
+  // Check if a document type is active
+  const isDocTypeActive = (type) => activeDocumentType === type && activeFilter === 'all'
+
+  const handleDocTypeClick = (type) => {
+    setActiveDocumentType(type)
+    setActiveFilter('all')
+  }
 
   return (
     <aside className="w-[250px] h-full bg-[#131313] flex flex-col shrink-0 px-[30px]">
@@ -29,28 +44,62 @@ export default function Sidebar() {
         <h2 className="text-2xl font-bold text-white">PaperStack</h2>
       </div>
 
-      {/* Navigation - aligns with filter row (pb-4) */}
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto -mx-2">
-        {/* All Notes */}
+        {/* All Notebooks */}
         <button
-          onClick={() => {
-            setActiveFilter('all')
-          }}
+          onClick={() => handleDocTypeClick('notebook')}
           className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors mb-1 ${
-            activeFilter === 'all' 
+            isDocTypeActive('notebook')
               ? 'bg-[#2C2C2E] text-white' 
               : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
           }`}
         >
-          <Folder set="broken" size={18} stroke="regular" />
-          <span className="text-[15px]">Notes</span>
+          <Document set="broken" size={18} stroke="regular" />
+          <span className="text-[15px]">Notebooks</span>
+          {notebooksCount > 0 && (
+            <span className="ml-auto text-xs text-[#8E8E93]">{notebooksCount}</span>
+          )}
         </button>
+
+        {/* Whiteboard */}
+        <button
+          onClick={() => handleDocTypeClick('whiteboard')}
+          className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors mb-1 ${
+            isDocTypeActive('whiteboard')
+              ? 'bg-[#2C2C2E] text-white' 
+              : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
+          }`}
+        >
+          <Layout size={18} strokeWidth={1.5} />
+          <span className="text-[15px]">Whiteboard</span>
+          {whiteboardCount > 0 && (
+            <span className="ml-auto text-xs text-[#8E8E93]">{whiteboardCount}</span>
+          )}
+        </button>
+
+        {/* Documents */}
+        <button
+          onClick={() => handleDocTypeClick('document')}
+          className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors mb-1 ${
+            isDocTypeActive('document')
+              ? 'bg-[#2C2C2E] text-white' 
+              : 'text-[#EBEBF5] hover:bg-[#2C2C2E]'
+          }`}
+        >
+          <FileText size={18} strokeWidth={1.5} />
+          <span className="text-[15px]">Documents</span>
+          {documentsCount > 0 && (
+            <span className="ml-auto text-xs text-[#8E8E93]">{documentsCount}</span>
+          )}
+        </button>
+
+        {/* Divider */}
+        <div className="h-px bg-[#3A3A3C] my-3" />
 
         {/* Favorites */}
         <button
-          onClick={() => {
-            setActiveFilter('favorites')
-          }}
+          onClick={() => setActiveFilter('favorites')}
           className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors mb-1 ${
             activeFilter === 'favorites' 
               ? 'bg-[#2C2C2E] text-white' 
@@ -66,9 +115,7 @@ export default function Sidebar() {
 
         {/* Trash */}
         <button
-          onClick={() => {
-            setActiveFilter('trash')
-          }}
+          onClick={() => setActiveFilter('trash')}
           className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors ${
             activeFilter === 'trash' 
               ? 'bg-[#2C2C2E] text-white' 
@@ -91,9 +138,7 @@ export default function Sidebar() {
             {labels.map((label) => (
               <button
                 key={label.id}
-                onClick={() => {
-                  setActiveFilter(label.id)
-                }}
+                onClick={() => setActiveFilter(label.id)}
                 className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors mb-1 ${
                   activeFilter === label.id 
                     ? 'bg-[#2C2C2E] text-white' 

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Filter, Plus, ChevronDown, Category, ChevronRight, Document, Folder, Edit, Scan, Image as ImageIcon, Camera, Star, Delete } from 'react-iconly'
 import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen, ChevronLeft, Tag, Trash2, X } from 'lucide-react'
-import { useAppStore, LABEL_COLORS } from '../../store/appStore'
+import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES } from '../../store/appStore'
 import NewNoteModal from '../ui/NewNoteModal'
 import NewFolderModal from '../ui/NewFolderModal'
 
@@ -23,6 +23,7 @@ export default function ContentHeader() {
   const {
     activeFilter,
     setActiveFilter,
+    activeDocumentType,
     labels,
     selectedFolderId,
     folders,
@@ -44,9 +45,12 @@ export default function ContentHeader() {
   const selectedFolder = folders.find(f => f.id === selectedFolderId)
 
   // Calculate counts
-  const allNotesCount = notes.filter(n => !n.inTrash).length
-  const favoritesCount = notes.filter(n => !n.inTrash && n.pinned).length
+  const allNotesCount = notes.filter(n => !n.inTrash && (n.documentType || 'notebook') === activeDocumentType).length
+  const favoritesCount = notes.filter(n => !n.inTrash && n.pinned && (n.documentType || 'notebook') === activeDocumentType).length
   const trashCount = notes.filter(n => n.inTrash).length
+
+  // Get current document type info
+  const currentDocType = DOCUMENT_TYPES[activeDocumentType] || DOCUMENT_TYPES.notebook
 
   useEffect(() => {
     if (showNewLabelInput) {
@@ -90,7 +94,7 @@ export default function ContentHeader() {
   }
 
   const handleQuickNote = () => {
-    const noteId = createNote()
+    const noteId = createNote(activeDocumentType)
     selectNote(noteId)
     setNewMenuOpen(false)
   }
@@ -130,7 +134,7 @@ export default function ContentHeader() {
         {/* Title row - only show when not in folder */}
         {!selectedFolderId && (
           <div className="px-[30px] py-4">
-            <h1 className="text-2xl font-bold text-white">Notes</h1>
+            <h1 className="text-2xl font-bold text-white">{currentDocType.label}</h1>
           </div>
         )}
 
@@ -170,7 +174,7 @@ export default function ContentHeader() {
                         >
                           <div className="flex items-center gap-3">
                             <FileText size={20} className="text-[#8E8E93]" />
-                            <span className="text-white text-[15px]">All Notes</span>
+                            <span className="text-white text-[15px]">All {currentDocType.label}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[#8E8E93] text-[13px]">{allNotesCount}</span>
@@ -372,19 +376,24 @@ export default function ContentHeader() {
 
                         {/* Text Doc */}
                         <button
-                          onClick={handleQuickNote}
+                          onClick={() => {
+                            const noteId = createNote('document')
+                            selectNote(noteId)
+                            setNewMenuOpen(false)
+                          }}
                           className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
                             <FileText size={22} className="text-[#30D158]" />
                           </div>
-                          <span className="text-white text-[12px]">Text Doc</span>
+                          <span className="text-white text-[12px]">Document</span>
                         </button>
 
                         {/* Whiteboard */}
                         <button
                           onClick={() => {
-                            addToast({ message: 'Whiteboard coming soon' })
+                            const noteId = createNote('whiteboard')
+                            selectNote(noteId)
                             setNewMenuOpen(false)
                           }}
                           className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
