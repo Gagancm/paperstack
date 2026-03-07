@@ -157,11 +157,6 @@ export default function ContentHeader() {
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
                   <div className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
                     
-                    {/* Header */}
-                    <div className="py-3 text-center border-b border-[#3A3A3C]">
-                      <h3 className="text-white font-semibold text-[15px]">Filter Notes</h3>
-                    </div>
-
                     {/* Quick Filters Section */}
                     <div className="p-3 pb-2">
                       <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
@@ -358,24 +353,19 @@ export default function ContentHeader() {
                   <div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
                     
-                    {/* Header */}
-                    <div className="py-3 text-center border-b border-[#3A3A3C]">
-                      <h3 className="text-white font-semibold text-[15px]">Create New</h3>
-                    </div>
-
                     {/* Quick Create Section - Icon Grid */}
                     <div className="p-3 pb-2">
                       <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
                         Quick Create
                       </p>
-                      <div className="flex justify-center gap-3">
+                      <div className="flex justify-center gap-2">
                         {/* Notebook */}
                         <button
                           onClick={handleNewNotebook}
-                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
+                          className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Document set="broken" size={22} stroke="regular" primaryColor="#fff" />
+                            <Document set="broken" size={22} stroke="regular" primaryColor="#0A84FF" />
                           </div>
                           <span className="text-white text-[12px]">Notebook</span>
                         </button>
@@ -383,10 +373,10 @@ export default function ContentHeader() {
                         {/* Text Doc */}
                         <button
                           onClick={handleQuickNote}
-                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
+                          className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <FileText size={22} className="text-white" />
+                            <FileText size={22} className="text-[#30D158]" />
                           </div>
                           <span className="text-white text-[12px]">Text Doc</span>
                         </button>
@@ -397,23 +387,23 @@ export default function ContentHeader() {
                             addToast({ message: 'Whiteboard coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
+                          className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Layout size={22} className="text-white" />
+                            <Layout size={22} className="text-[#BF5AF2]" />
                           </div>
                           <span className="text-white text-[12px]">Whiteboard</span>
                         </button>
                       </div>
 
                       {/* Second row - Import and Quick Record */}
-                      <div className="flex justify-center gap-3 mt-1">
+                      <div className="flex justify-center gap-2 mt-1">
                         <button
                           onClick={handleImport}
-                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
+                          className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Download size={22} className="text-white" />
+                            <Download size={22} className="text-[#FF9500]" />
                           </div>
                           <span className="text-white text-[12px]">Import</span>
                         </button>
@@ -423,12 +413,12 @@ export default function ContentHeader() {
                             addToast({ message: 'Quick Record coming soon' })
                             setNewMenuOpen(false)
                           }}
-                          className="flex flex-col items-center gap-2 p-2.5 rounded-xl hover:bg-[#3A3A3C] transition-colors"
+                          className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
-                            <Mic size={22} className="text-white" />
+                            <Mic size={22} className="text-[#FF453A]" />
                           </div>
-                          <span className="text-white text-[12px]">Quick Record</span>
+                          <span className="text-white text-[12px]">Record</span>
                         </button>
                       </div>
                     </div>
@@ -518,9 +508,6 @@ export default function ContentHeader() {
               )}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-5 bg-[#3A3A3C] mx-2" />
-
             {/* View options dropdown */}
             <div className="relative">
               <button 
@@ -533,69 +520,76 @@ export default function ContentHeader() {
               {viewMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setViewMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 min-w-[200px] py-2 border border-[#3A3A3C] overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[240px] overflow-hidden border border-[#3A3A3C]">
                     
+                    {/* View Mode Section */}
+                    <div className="p-3 pb-2">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        View Mode
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        {/* Grid View */}
+                        <button
+                          onClick={() => {
+                            setViewMode('grid')
+                            setViewMenuOpen(false)
+                          }}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Category set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                            <span className="text-white text-[15px]">Grid</span>
+                          </div>
+                          {viewMode === 'grid' && <Check size={18} className="text-[#0A84FF]" />}
+                        </button>
 
-
-                    {/* Grid View */}
-                    <button
-                      onClick={() => {
-                        setViewMode('grid')
-                        setViewMenuOpen(false)
-                      }}
-                      className="w-full px-4 py-3 flex items-center justify-between text-white hover:bg-[#3A3A3C] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {viewMode === 'grid' && <Check size={18} className="text-[#0A84FF]" />}
-                        {viewMode !== 'grid' && <div className="w-[18px]" />}
-                        <span className="text-[15px]">Grid</span>
+                        {/* List View */}
+                        <button
+                          onClick={() => {
+                            setViewMode('list')
+                            setViewMenuOpen(false)
+                          }}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <List size={20} className="text-[#8E8E93]" />
+                            <span className="text-white text-[15px]">List</span>
+                          </div>
+                          {viewMode === 'list' && <Check size={18} className="text-[#0A84FF]" />}
+                        </button>
                       </div>
-                      <Category set="broken" size={18} stroke="regular" />
-                    </button>
+                    </div>
 
-                    {/* List View */}
-                    <button
-                      onClick={() => {
-                        setViewMode('list')
-                        setViewMenuOpen(false)
-                      }}
-                      className="w-full px-4 py-3 flex items-center justify-between text-white hover:bg-[#3A3A3C] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {viewMode === 'list' && <Check size={18} className="text-[#0A84FF]" />}
-                        {viewMode !== 'list' && <div className="w-[18px]" />}
-                        <span className="text-[15px]">List</span>
+                    {/* Sort By Section */}
+                    <div className="px-3 pb-3">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Sort By
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        {sortOptions.map((opt, index) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => {
+                              setSortBy(opt.id)
+                              setViewMenuOpen(false)
+                            }}
+                            className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors ${
+                              index < sortOptions.length - 1 ? 'border-b border-[#3A3A3C]' : ''
+                            }`}
+                          >
+                            <span className="text-white text-[15px]">{opt.label}</span>
+                            {sortBy === opt.id && <Check size={18} className="text-[#0A84FF]" />}
+                          </button>
+                        ))}
                       </div>
-                      <List size={18} className="text-white" />
-                    </button>
-
-                    {/* Divider */}
-                    <div className="h-px bg-[#3A3A3C] mx-3 my-1" />
-
-                    {/* Sort options */}
-                    {sortOptions.map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => {
-                          setSortBy(opt.id)
-                          setViewMenuOpen(false)
-                        }}
-                        className="w-full px-4 py-3 flex items-center justify-between text-white hover:bg-[#3A3A3C] transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          {sortBy === opt.id && <Check size={18} className="text-[#0A84FF]" />}
-                          {sortBy !== opt.id && <div className="w-[18px]" />}
-                          <span className="text-[15px]">{opt.label}</span>
-                        </div>
-                        {sortBy === opt.id && (
-                          <ChevronDown set="broken" size={16} stroke="regular" primaryColor="#0A84FF" />
-                        )}
-                      </button>
-                    ))}
+                    </div>
                   </div>
                 </>
               )}
             </div>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
 
             {/* Google Drive Sync dropdown */}
             <div className="relative">
@@ -609,65 +603,69 @@ export default function ContentHeader() {
               {cloudMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setCloudMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[300px] overflow-hidden border border-[#3A3A3C]">
+                  <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[280px] overflow-hidden border border-[#3A3A3C]">
                     
-                    {/* Header */}
-                    <div className="py-3 text-center border-b border-[#3A3A3C]">
-                      <h3 className="text-white font-semibold text-[15px]">Google Drive Sync</h3>
-                    </div>
-
-                    {/* Sync Status Section */}
-                    <div className="p-3">
-                      <div className="bg-[#1C1C1E] rounded-xl px-4 py-3">
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 shrink-0">
-                            {syncStatus === 'saved' || syncStatus === 'saving' ? (
-                              <CheckCircle2 
-                                size={24} 
-                                className="text-[#34C759]"
-                                fill="#34C759"
-                                strokeWidth={0}
-                              />
-                            ) : (
-                              <Cloud size={24} className="text-[#8E8E93]" />
-                            )}
-                          </div>
+                    {/* Status Section */}
+                    <div className="p-3 pb-2">
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Status
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        <div className="px-4 py-3 flex items-center gap-3">
+                          {syncStatus === 'saved' || syncStatus === 'saving' ? (
+                            <CheckCircle2 
+                              size={20} 
+                              className="text-[#34C759]"
+                              fill="#34C759"
+                              strokeWidth={0}
+                            />
+                          ) : (
+                            <Cloud size={20} className="text-[#8E8E93]" />
+                          )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-[15px] font-medium leading-tight">
-                              {syncStatus === 'saved' ? 'Synced with Google Drive' : 
+                            <p className="text-white text-[15px]">
+                              {syncStatus === 'saved' ? 'Synced' : 
                                syncStatus === 'saving' ? 'Syncing...' :
-                               syncStatus === 'offline' ? 'Offline - Saved locally' :
-                               'Sync error'}
+                               syncStatus === 'offline' ? 'Offline' :
+                               'Error'}
                             </p>
-                            <p className="text-[#8E8E93] text-[13px] mt-0.5">
-                              Last sync: {formatLastSync()}
+                            <p className="text-[#8E8E93] text-[13px]">
+                              {formatLastSync()}
                             </p>
                           </div>
                         </div>
-
-                        <button
-                          onClick={handleSyncNow}
-                          disabled={isSyncing}
-                          className="mt-3 text-[#0A84FF] text-[17px] font-normal flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {isSyncing && <RefreshCw size={16} className="animate-spin" />}
-                          {isSyncing ? 'Syncing...' : 'Sync Now'}
-                        </button>
                       </div>
                     </div>
 
-                    {/* Sync Settings */}
+                    {/* Actions Section */}
                     <div className="px-3 pb-3">
-                      <button
-                        onClick={() => {
-                          addToast({ message: 'Sync settings coming soon' })
-                          setCloudMenuOpen(false)
-                        }}
-                        className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
-                      >
-                        <span className="text-white text-[15px]">Sync Settings</span>
-                        <ChevronRight set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
-                      </button>
+                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                        Actions
+                      </p>
+                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                        <button
+                          onClick={handleSyncNow}
+                          disabled={isSyncing}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C] disabled:opacity-50"
+                        >
+                          <RefreshCw size={20} className={`text-[#0A84FF] ${isSyncing ? 'animate-spin' : ''}`} />
+                          <span className="text-white text-[15px]">{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            addToast({ message: 'Sync settings coming soon' })
+                            setCloudMenuOpen(false)
+                          }}
+                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Cloud size={20} className="text-[#8E8E93]" />
+                            <span className="text-white text-[15px]">Sync Settings</span>
+                          </div>
+                          <ChevronRight set="broken" size={18} stroke="regular" primaryColor="#8E8E93" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>

@@ -25,18 +25,20 @@ export default function TopBar() {
         </div>
 
         {/* Right: Actions - fixed width to balance left side */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93]">
-            <Notification set="broken" size={22} stroke="regular" />
+            <Notification set="broken" size={18} stroke="regular" />
           </button>
-          <button className="w-8 h-8 rounded-full bg-[#3A3A3C] flex items-center justify-center">
-            {user?.avatar ? (
-              <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <div className="text-[#8E8E93]">
-                <User set="broken" size={18} stroke="regular" />
-              </div>
-            )}
+          <button className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors">
+            <div className="w-7 h-7 rounded-full bg-[#3A3A3C] flex items-center justify-center">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <div className="text-[#8E8E93]">
+                  <User set="broken" size={16} stroke="regular" />
+                </div>
+              )}
+            </div>
           </button>
         </div>
       </header>
