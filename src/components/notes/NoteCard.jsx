@@ -1,25 +1,31 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Star, Folder, Delete, Image as ImageIcon, TickSquare } from 'react-iconly'
-import { Copy, X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, Lightbulb, Target, TrendingUp, Users, ShoppingBag, Plane, Car, Utensils, Dumbbell, Moon, Sun, Cloud, Umbrella, Leaf, Flower2, Smile } from 'lucide-react'
+import { Copy, X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, RotateCcw, Trash2 } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
-// Notebook color options using our existing color scheme
+// Notebook color options - one entry per palette id so each selection shows its actual color
 const NOTEBOOK_COLORS = {
-  blue: { main: '#0A84FF', spine: '#0866CC', cover: '#3BA1FF', accent: '#60B8FF' },
-  purple: { main: '#BF5AF2', spine: '#9645C2', cover: '#D17FF7', accent: '#E0A0FA' },
-  pink: { main: '#FF375F', spine: '#CC2C4C', cover: '#FF6B8A', accent: '#FF9AAF' },
   red: { main: '#FF453A', spine: '#CC372E', cover: '#FF7A72', accent: '#FFA099' },
   orange: { main: '#FF9500', spine: '#CC7700', cover: '#FFB340', accent: '#FFCC73' },
   yellow: { main: '#FFD60A', spine: '#CCAB08', cover: '#FFE347', accent: '#FFED80' },
+  lime: { main: '#8BC34A', spine: '#6B9B3A', cover: '#A5D66A', accent: '#C5E89E' },
   green: { main: '#30D158', spine: '#26A746', cover: '#5EDE7E', accent: '#8BE9A2' },
   teal: { main: '#48C9B0', spine: '#3AA18D', cover: '#6DD5C3', accent: '#95E2D5' },
+  cyan: { main: '#32ADE6', spine: '#2280B8', cover: '#5BC0ED', accent: '#8ED5F5' },
+  blue: { main: '#0A84FF', spine: '#0866CC', cover: '#3BA1FF', accent: '#60B8FF' },
+  indigo: { main: '#5856D6', spine: '#3D3BA8', cover: '#7B78E0', accent: '#A5A3EB' },
+  purple: { main: '#BF5AF2', spine: '#9645C2', cover: '#D17FF7', accent: '#E0A0FA' },
+  pink: { main: '#FF375F', spine: '#CC2C4C', cover: '#FF6B8A', accent: '#FF9AAF' },
+  magenta: { main: '#FF2D92', spine: '#CC2575', cover: '#FF5AA8', accent: '#FF8AC4' },
+  mint: { main: '#A5D6A7', spine: '#7AB07C', cover: '#C5E8C6', accent: '#DDF0DE' },
+  sky: { main: '#81D4FA', spine: '#5AB0E0', cover: '#A8E2FC', accent: '#C9EDFD' },
   gray: { main: '#8E8E93', spine: '#727276', cover: '#AEAEB2', accent: '#C7C7CB' },
+  white: { main: '#E5E5EA', spine: '#C7C7CC', cover: '#F2F2F7', accent: '#FFFFFF' },
 }
 
-// Extended color palette like GoodNotes
+// Color palette (subset; each id maps to a notebook color key)
 const COLOR_PALETTE = [
-  // Row 1 - Rainbow spectrum
   { id: 'red', color: '#FF453A' },
   { id: 'orange', color: '#FF9500' },
   { id: 'yellow', color: '#FFD60A' },
@@ -32,24 +38,15 @@ const COLOR_PALETTE = [
   { id: 'purple', color: '#BF5AF2' },
   { id: 'pink', color: '#FF375F' },
   { id: 'magenta', color: '#FF2D92' },
-  // Row 2 - Pastels and neutrals
-  { id: 'peach', color: '#FFAB91' },
-  { id: 'cream', color: '#FFE0B2' },
   { id: 'mint', color: '#A5D6A7' },
   { id: 'sky', color: '#81D4FA' },
-  { id: 'lavender', color: '#CE93D8' },
-  { id: 'rose', color: '#F48FB1' },
-  { id: 'brown', color: '#A1887F' },
   { id: 'gray', color: '#8E8E93' },
-  { id: 'slate', color: '#546E7A' },
-  { id: 'charcoal', color: '#37474F' },
   { id: 'white', color: '#FFFFFF' },
-  { id: 'black', color: '#1C1C1E' },
 ]
 
 const LABEL_COLOR_OPTIONS = Object.entries(LABEL_COLORS).map(([id, color]) => ({ id, color }))
 
-// Icon options for notebooks
+// Icon options for notebooks (18 total)
 const ICON_OPTIONS = [
   { id: 'none', icon: null, label: 'None' },
   { id: 'heart', icon: Heart, label: 'Heart' },
@@ -69,22 +66,6 @@ const ICON_OPTIONS = [
   { id: 'home', icon: Home, label: 'Home' },
   { id: 'briefcase', icon: Briefcase, label: 'Work' },
   { id: 'graduation', icon: GraduationCap, label: 'School' },
-  { id: 'lightbulb', icon: Lightbulb, label: 'Ideas' },
-  { id: 'target', icon: Target, label: 'Goals' },
-  { id: 'trending', icon: TrendingUp, label: 'Progress' },
-  { id: 'users', icon: Users, label: 'Team' },
-  { id: 'shopping', icon: ShoppingBag, label: 'Shopping' },
-  { id: 'plane', icon: Plane, label: 'Travel' },
-  { id: 'car', icon: Car, label: 'Car' },
-  { id: 'food', icon: Utensils, label: 'Food' },
-  { id: 'fitness', icon: Dumbbell, label: 'Fitness' },
-  { id: 'moon', icon: Moon, label: 'Night' },
-  { id: 'sun', icon: Sun, label: 'Day' },
-  { id: 'cloud', icon: Cloud, label: 'Weather' },
-  { id: 'umbrella', icon: Umbrella, label: 'Rain' },
-  { id: 'leaf', icon: Leaf, label: 'Nature' },
-  { id: 'flower', icon: Flower2, label: 'Garden' },
-  { id: 'smile', icon: Smile, label: 'Happy' },
 ]
 
 export default function NoteCard({ note, onClick, isSelected }) {
@@ -103,10 +84,11 @@ export default function NoteCard({ note, onClick, isSelected }) {
     e.stopPropagation()
     if (menuButtonRef.current) {
       const r = menuButtonRef.current.getBoundingClientRect()
-      // Position menu to the right of the card
+      // Position menu right next to the dropdown chevron, slightly above it
+      const menuWidth = note.inTrash ? 280 : 340
       setMenuPosition({ 
-        top: Math.max(100, r.top - 100), 
-        left: Math.min(window.innerWidth - 360, r.right + 10)
+        top: r.top - 8,
+        left: Math.min(window.innerWidth - menuWidth - 12, r.right + 6)
       })
     }
     setMenuOpen(true)
@@ -127,9 +109,10 @@ export default function NoteCard({ note, onClick, isSelected }) {
     const d = new Date(dateStr)
     const today = new Date()
     const isToday = d.toDateString() === today.toDateString()
-    if (isToday) {
-      return `Today at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
-    }
+    if (isToday) return 'Today'
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
@@ -208,23 +191,23 @@ export default function NoteCard({ note, onClick, isSelected }) {
         </div>
       </div>
 
-      {/* Note info */}
-      <div className="w-full text-center px-1">
-        <div className="flex items-center justify-center gap-0.5">
-          <p className="text-white font-medium text-sm truncate max-w-[90px]">
+      {/* Note info: left = name + day, right = dropdown */}
+      <div className="w-full px-1 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1 text-left">
+          <p className="text-white font-medium text-sm truncate">
             {note.title || 'Untitled'}
           </p>
-          <button
-            ref={menuButtonRef}
-            onClick={openMenu}
-            className="p-0.5 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF]"
-          >
-            <ChevronDown set="broken" size={12} stroke="regular" />
-          </button>
+          <p className="text-[#8E8E93] text-[11px]">
+            {formatDate(note.updatedAt)}
+          </p>
         </div>
-        <p className="text-[#8E8E93] text-[11px]">
-          {formatDate(note.updatedAt)}
-        </p>
+        <button
+          ref={menuButtonRef}
+          onClick={openMenu}
+          className="p-1 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF]"
+        >
+          <ChevronDown set="broken" size={20} stroke="regular" />
+        </button>
       </div>
 
       {/* Menu */}
@@ -273,9 +256,10 @@ function NoteEditMenu({
   const inputRef = useRef(null)
   const newLabelInputRef = useRef(null)
   
-  const { createLabel } = useAppStore()
+  const { createLabel, restoreNote, permanentlyDeleteNote } = useAppStore()
   
   const noteLabelIds = note.labels || []
+  const inTrash = note.inTrash === true
 
   useEffect(() => {
     // Focus input when menu opens
@@ -296,15 +280,7 @@ function NoteEditMenu({
 
   const handleColorSelect = (colorId) => {
     setSelectedColor(colorId)
-    // Map extended palette to notebook colors (use closest match)
-    const notebookColorMap = {
-      red: 'red', orange: 'orange', yellow: 'yellow', lime: 'green', green: 'green',
-      teal: 'teal', cyan: 'blue', blue: 'blue', indigo: 'purple', purple: 'purple',
-      pink: 'pink', magenta: 'pink', peach: 'orange', cream: 'yellow', mint: 'green',
-      sky: 'blue', lavender: 'purple', rose: 'pink', brown: 'gray', gray: 'gray',
-      slate: 'gray', charcoal: 'gray', white: 'gray', black: 'gray'
-    }
-    updateNote(note.id, { colorKey: notebookColorMap[colorId] || 'blue' })
+    updateNote(note.id, { colorKey: colorId })
   }
 
   const handleIconSelect = (iconId) => {
@@ -327,16 +303,16 @@ function NoteEditMenu({
     setNewLabelName('')
     setNewLabelColor('blue')
     setShowNewLabelInput(false)
-    addToast({ message: `Label "${newLabelName.trim()}" created` })
+    addToast({ type: 'success', message: `Label "${newLabelName.trim()}" created` })
   }
 
   const handleMove = () => {
-    addToast({ message: 'Move feature coming soon' })
+    addToast({ type: 'info', message: 'Move feature coming soon' })
     onClose()
   }
 
   const handleExport = () => {
-    addToast({ message: 'Export feature coming soon' })
+    addToast({ type: 'info', message: 'Export feature coming soon' })
     onClose()
   }
 
@@ -351,6 +327,37 @@ function NoteEditMenu({
     { id: 'tag', icon: Tag, label: 'Tag' },
     { id: 'icon', icon: Grid, label: 'Icon' },
   ]
+
+  // Trash: only Restore and Delete Permanently (no rename/title bar)
+  if (inTrash) {
+    return (
+      <>
+        <div className="fixed inset-0 z-[9998]" onClick={onClose} />
+        <div
+          className="fixed bg-[#2C2C2E] rounded-2xl shadow-xl z-[9999] min-w-[260px] w-max overflow-hidden border border-[#3A3A3C]"
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-3 space-y-2">
+            <button
+              onClick={() => { restoreNote(note.id); addToast({ type: 'success', message: 'Restored' }); onClose() }}
+              className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors text-left"
+            >
+              <RotateCcw size={22} className="text-[#30D158] shrink-0" />
+              <span className="text-white text-[17px] whitespace-nowrap">Restore</span>
+            </button>
+            <button
+              onClick={() => { permanentlyDeleteNote(note.id); addToast({ type: 'success', message: 'Deleted permanently' }); onClose() }}
+              className="w-full bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex items-center gap-4 hover:bg-[#2A2A2C] transition-colors text-left"
+            >
+              <Trash2 size={22} className="text-[#FF453A] shrink-0" />
+              <span className="text-[#FF453A] text-[17px] whitespace-nowrap">Delete Permanently</span>
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -413,10 +420,10 @@ function NoteEditMenu({
           {/* Image Tab */}
           {activeTab === 'image' && (
             <div className="bg-[#1C1C1E] rounded-xl p-4">
-              <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-[#3A3A3C] rounded-xl">
-                <ImageIcon set="broken" size={40} stroke="regular" primaryColor="#8E8E93" />
-                <p className="text-[#8E8E93] text-sm mt-2">Add Cover Image</p>
-                <button className="mt-3 px-4 py-2 bg-[#0A84FF] text-white text-sm font-medium rounded-lg hover:bg-[#0A84FF]/80 transition-colors">
+              <div className="h-14 flex flex-row items-center justify-center gap-2 border-2 border-dashed border-[#3A3A3C] rounded-xl px-3">
+                <ImageIcon set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                <p className="text-[#8E8E93] text-xs">Add Cover Image</p>
+                <button className="px-3 py-1.5 bg-[#0A84FF] text-white text-xs font-medium rounded-lg hover:bg-[#0A84FF]/80 transition-colors">
                   Choose Image
                 </button>
               </div>
@@ -427,7 +434,7 @@ function NoteEditMenu({
           {activeTab === 'color' && (
             <div className="bg-[#1C1C1E] rounded-xl p-4">
               {/* Color Grid */}
-              <div className="grid grid-cols-12 gap-2">
+              <div className="grid grid-cols-8 gap-3">
                 {COLOR_PALETTE.map((opt) => (
                   <button
                     key={opt.id}
@@ -439,22 +446,11 @@ function NoteEditMenu({
                   >
                     {selectedColor === opt.id && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Check size={14} className={opt.id === 'white' || opt.id === 'cream' ? 'text-gray-800' : 'text-white'} strokeWidth={3} />
+                        <Check size={14} className={opt.id === 'white' ? 'text-gray-800' : 'text-white'} strokeWidth={3} />
                       </div>
                     )}
                   </button>
                 ))}
-              </div>
-              
-              {/* Opacity Slider (visual only for now) */}
-              <div className="mt-4 pt-3 border-t border-[#3A3A3C]">
-                <div className="flex items-center gap-3">
-                  <span className="text-[#8E8E93] text-sm">Opacity</span>
-                  <div className="flex-1 h-2 bg-gradient-to-r from-transparent to-white rounded-full relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-[#0A84FF]" />
-                  </div>
-                  <span className="text-white text-sm w-10 text-right">100%</span>
-                </div>
               </div>
             </div>
           )}
@@ -634,4 +630,4 @@ function NoteEditMenu({
   )
 }
 
-export { NOTEBOOK_COLORS, ICON_OPTIONS }
+export { NOTEBOOK_COLORS, COLOR_PALETTE, ICON_OPTIONS }

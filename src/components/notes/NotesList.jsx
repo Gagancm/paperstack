@@ -1,4 +1,4 @@
-import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES } from '../../store/appStore'
+import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES, effectiveDocType } from '../../store/appStore'
 import FolderCard from './FolderCard'
 import NoteCard from './NoteCard'
 import { Star, Document } from 'react-iconly'
@@ -18,12 +18,23 @@ export default function NotesList() {
     viewMode,
     labels,
     activeDocumentType,
+    activeFilter,
   } = useAppStore()
   
   const filteredNotes = getFilteredNotes()
   const folders = getFilteredFolders()
   const showFolders = !selectedFolderId
+  const groupByType = activeFilter === 'trash' || activeFilter === 'favorites'
   const hasContent = (showFolders && folders.length > 0) || filteredNotes.length > 0
+
+  // Group notes by document type for Trash and Favorites views
+  const notesByType = groupByType
+    ? ['notebook', 'task', 'whiteboard'].map((type) => ({
+        type,
+        label: DOCUMENT_TYPES[type]?.label || type,
+        notes: filteredNotes.filter((n) => effectiveDocType(n) === type),
+      })).filter((g) => g.notes.length > 0)
+    : null
 
   const handleDeleteFolder = (folder) => {
     deleteFolder(folder.id)
@@ -64,8 +75,8 @@ export default function NotesList() {
   const docTypeInfo = DOCUMENT_TYPES[activeDocumentType] || DOCUMENT_TYPES.notebook
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#1C1C1E]">
-      <div className="py-6 px-[30px]">
+    <div className={`flex-1 bg-[#1C1C1E] flex flex-col min-h-0 ${hasContent ? 'overflow-y-auto' : 'overflow-hidden flex items-center justify-center'}`}>
+      <div className={hasContent ? 'py-6 px-[30px]' : 'w-full flex items-center justify-center px-[30px]'}>
         {hasContent ? (
           <div className="flex flex-col gap-8">
             {/* Folders Section */}
@@ -100,49 +111,75 @@ export default function NotesList() {
               </div>
             )}
             
-            {/* Notes Section */}
+            {/* Notes Section - grouped by type in Trash/Favorites, single section otherwise */}
             {filteredNotes.length > 0 && (
-              <div>
-                {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{docTypeInfo.label}</h3>}
-                {viewMode === 'grid' ? (
-                  <div className="flex flex-wrap gap-4">
-                    {filteredNotes.map((note) => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        onClick={selectNote}
-                        isSelected={selectedNoteId === note.id}
-                      />
-                    ))}
-                  </div>
+              <div className="flex flex-col gap-8">
+                {groupByType && notesByType ? (
+                  notesByType.map(({ type, label, notes: typeNotes }) => (
+                    <div key={type}>
+                      <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{label}</h3>
+                      {viewMode === 'grid' ? (
+                        <div className="flex flex-wrap gap-4">
+                          {typeNotes.map((note) => (
+                            <NoteCard
+                              key={note.id}
+                              note={note}
+                              onClick={selectNote}
+                              isSelected={selectedNoteId === note.id}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          {typeNotes.map((note) => (
+                            <NoteListItem
+                              key={note.id}
+                              note={note}
+                              onClick={() => selectNote(note.id)}
+                              isSelected={selectedNoteId === note.id}
+                              formatDate={formatDate}
+                              labelObjects={getNoteLabelObjects(note)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
                 ) : (
-                  <div className="flex flex-col gap-1">
-                    {filteredNotes.map((note) => (
-                      <NoteListItem
-                        key={note.id}
-                        note={note}
-                        onClick={() => selectNote(note.id)}
-                        isSelected={selectedNoteId === note.id}
-                        formatDate={formatDate}
-                        labelObjects={getNoteLabelObjects(note)}
-                      />
-                    ))}
+                  <div>
+                    {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{docTypeInfo.label}</h3>}
+                    {viewMode === 'grid' ? (
+                      <div className="flex flex-wrap gap-4">
+                        {filteredNotes.map((note) => (
+                          <NoteCard
+                            key={note.id}
+                            note={note}
+                            onClick={selectNote}
+                            isSelected={selectedNoteId === note.id}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {filteredNotes.map((note) => (
+                          <NoteListItem
+                            key={note.id}
+                            note={note}
+                            onClick={() => selectNote(note.id)}
+                            isSelected={selectedNoteId === note.id}
+                            formatDate={formatDate}
+                            labelObjects={getNoteLabelObjects(note)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )}
-            
-            {/* Empty folder state */}
-            {selectedFolderId && filteredNotes.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-5xl mb-4">📂</div>
-                <h3 className="text-lg font-semibold text-white mb-2">This folder is empty</h3>
-                <p className="text-[#8E8E93] text-sm">Create a new {docTypeInfo.label.toLowerCase().slice(0, -1)} or move existing ones here</p>
-              </div>
-            )}
           </div>
         ) : (
-          <EmptyState docType={docTypeInfo} />
+          <EmptyState docType={docTypeInfo} activeFilter={activeFilter} selectedFolderId={selectedFolderId} />
         )}
       </div>
     </div>
@@ -151,14 +188,14 @@ export default function NotesList() {
 
 // List view item for notes
 function NoteListItem({ note, onClick, isSelected, formatDate, labelObjects }) {
-  const documentType = note.documentType || 'notebook'
+  const documentType = effectiveDocType(note)
   
   // Get document type icon
   const getDocTypeIcon = () => {
     switch (documentType) {
       case 'whiteboard':
         return <Layout size={14} className="text-[#BF5AF2]" />
-      case 'document':
+      case 'task':
         return <FileText size={14} className="text-[#30D158]" />
       default:
         return <Document set="broken" size={14} stroke="regular" primaryColor="#0A84FF" />
@@ -278,29 +315,90 @@ function FolderListItem({ folder, noteCount, onClick, formatDate }) {
   )
 }
 
-function EmptyState({ docType }) {
-  // Get appropriate icon based on document type
-  const getIcon = () => {
-    switch (docType.id) {
-      case 'whiteboard':
-        return '🎨'
-      case 'document':
-        return '📄'
-      default:
-        return '📓'
+function EmptyState({ docType, activeFilter, selectedFolderId }) {
+  const isTrash = activeFilter === 'trash'
+  const isFavorites = activeFilter === 'favorites'
+  const isEmptyFolder = !!selectedFolderId
+
+  const TRASH_JOKES = [
+    { line1: "The trash can is on a diet.", line2: "It hasn't had a single byte all day." },
+    { line1: "Even your trash is minimalist.", line2: "Marie Kondo would be proud (and confused)." },
+    { line1: "Your trash ran away to join the circus.", line2: "It said it needed more drama in its life." },
+    { line1: "The trash is empty. The trash is clean.", line2: "Your ex's love letters have nowhere to hide." },
+    { line1: "No trash. No drama.", line2: "Just you and your impeccable life choices." },
+  ]
+  const FAVORITES_JOKES = [
+    { line1: "Your favorites list is playing hard to get.", line2: "Star something. Anything. We believe in you." },
+    { line1: "Zero favorites. Maximum mystery.", line2: "What will be worthy of the gold star?" },
+    { line1: "The stars are empty tonight.", line2: "Give a note a ⭐ and watch it shine here." },
+    { line1: "No favorites yet—your heart is still shopping.", line2: "Tap that star when you find the one." },
+    { line1: "Even the best need a favorite.", line2: "Pick one. We won't tell the others." },
+  ]
+  const NOTEBOOK_JOKES = [
+    { line1: "No notebooks? That's a bold choice.", line2: "Hit + New when you're ready to write the next chapter." },
+    { line1: "The notebook shelf is judging no one.", line2: "Add one and break the silence." },
+    { line1: "Zero notebooks. Infinite potential.", line2: "Your first one is one click away." },
+    { line1: "Empty notebooks, empty mind?", line2: "Nah. Just hit + New and fill the void." },
+    { line1: "No notebooks yet. The pens are nervous.", line2: "Create one and put them to work." },
+  ]
+  const WHITEBOARD_JOKES = [
+    { line1: "The whiteboard is blank. So is the cat's schedule.", line2: "Start drawing. Someone has to." },
+    { line1: "No whiteboards. The markers are crying.", line2: "Create one and give them a purpose." },
+    { line1: "Infinite canvas, zero boards.", line2: "Add one and go wild. No eraser shame." },
+    { line1: "Blank slate energy. Literally.", line2: "+ New and make your first mess." },
+    { line1: "The whiteboard is waiting for its first doodle.", line2: "Don't keep it waiting." },
+  ]
+  const TASK_JOKES = [
+    { line1: "No tasks. Either you're done or in denial.", line2: "Add one. We won't tell." },
+    { line1: "Zero tasks. The to-do list is on vacation.", line2: "Create one when it gets back." },
+    { line1: "No tasks yet. Your future self will thank you.", line2: "Or curse you. Depends on the task." },
+    { line1: "The task list is empty. So is our judgment.", line2: "Hit + New when you're ready to adult." },
+    { line1: "No tasks. Productivity is a myth anyway.", line2: "Just kidding. Add one. You got this." },
+  ]
+  const FOLDER_JOKES = [
+    { line1: "This folder is on a cleanse.", line2: `No ${docType.label.toLowerCase().slice(0, -1)} in here yet.` },
+    { line1: "Empty folder. Full potential.", line2: `Create or move ${docType.label.toLowerCase()} in and make it home.` },
+    { line1: "The folder is waiting for company.", line2: `Drop in a ${docType.label.toLowerCase().slice(0, -1)} or two.` },
+  ]
+
+  const getContent = () => {
+    if (isTrash) {
+      const joke = TRASH_JOKES[Math.floor(Math.random() * TRASH_JOKES.length)]
+      return { illustration: '🗑️', ...joke }
     }
+    if (isFavorites) {
+      const joke = FAVORITES_JOKES[Math.floor(Math.random() * FAVORITES_JOKES.length)]
+      return { illustration: '⭐', ...joke }
+    }
+    if (isEmptyFolder) {
+      const joke = FOLDER_JOKES[Math.floor(Math.random() * FOLDER_JOKES.length)]
+      return { illustration: '📂', ...joke }
+    }
+    const icons = { whiteboard: '🎨', task: '📄', notebook: '📓' }
+    const icon = icons[docType.id] || '📓'
+    if (docType.id === 'notebook') {
+      const joke = NOTEBOOK_JOKES[Math.floor(Math.random() * NOTEBOOK_JOKES.length)]
+      return { illustration: icon, ...joke }
+    }
+    if (docType.id === 'whiteboard') {
+      const joke = WHITEBOARD_JOKES[Math.floor(Math.random() * WHITEBOARD_JOKES.length)]
+      return { illustration: icon, ...joke }
+    }
+    if (docType.id === 'task') {
+      const joke = TASK_JOKES[Math.floor(Math.random() * TASK_JOKES.length)]
+      return { illustration: icon, ...joke }
+    }
+    const joke = NOTEBOOK_JOKES[Math.floor(Math.random() * NOTEBOOK_JOKES.length)]
+    return { illustration: icon, ...joke }
   }
 
+  const content = getContent()
+
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-6xl mb-6">{getIcon()}</div>
-      <h2 className="text-xl font-bold text-white mb-2">No {docType.label.toLowerCase()} yet</h2>
-      <p className="text-[#8E8E93] text-sm max-w-xs">
-        Tap the + New button to create your first {docType.label.toLowerCase().slice(0, -1)}
-      </p>
-      <p className="text-[#636366] text-xs mt-2 max-w-xs">
-        {docType.description}
-      </p>
+    <div className="flex flex-col items-center justify-center text-center max-w-sm">
+      <div className="text-7xl mb-6 select-none" aria-hidden>{content.illustration}</div>
+      <p className="text-xl font-bold text-white mb-2">{content.line1}</p>
+      <p className="text-[#8E8E93] text-sm">{content.line2}</p>
     </div>
   )
 }
@@ -314,30 +412,20 @@ function stripHtml(html) {
 
 function getNotebookColor(colorKey) {
   const colors = {
-    blue: '#0A84FF',
-    purple: '#BF5AF2',
-    pink: '#FF375F',
-    red: '#FF453A',
-    orange: '#FF9500',
-    yellow: '#FFD60A',
-    green: '#30D158',
-    teal: '#48C9B0',
-    gray: '#8E8E93',
+    red: '#FF453A', orange: '#FF9500', yellow: '#FFD60A', lime: '#8BC34A', green: '#30D158',
+    teal: '#48C9B0', cyan: '#32ADE6', blue: '#0A84FF', indigo: '#5856D6', purple: '#BF5AF2',
+    pink: '#FF375F', magenta: '#FF2D92', mint: '#A5D6A7', sky: '#81D4FA', gray: '#8E8E93',
+    white: '#E5E5EA',
   }
   return colors[colorKey] || colors.blue
 }
 
 function getFolderColor(colorKey) {
   const colors = {
-    blue: '#0A84FF',
-    purple: '#BF5AF2',
-    pink: '#FF375F',
-    red: '#FF453A',
-    orange: '#FF9500',
-    yellow: '#FFD60A',
-    green: '#30D158',
-    teal: '#48C9B0',
-    gray: '#8E8E93',
+    red: '#FF453A', orange: '#FF9500', yellow: '#FFD60A', lime: '#8BC34A', green: '#30D158',
+    teal: '#48C9B0', cyan: '#32ADE6', blue: '#0A84FF', indigo: '#5856D6', purple: '#BF5AF2',
+    pink: '#FF375F', magenta: '#FF2D92', mint: '#A5D6A7', sky: '#81D4FA', gray: '#8E8E93',
+    white: '#E5E5EA',
   }
   return colors[colorKey] || colors.blue
 }

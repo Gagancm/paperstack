@@ -1,25 +1,31 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Delete, Star, Folder, Image as ImageIcon, TickSquare } from 'react-iconly'
-import { X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, Lightbulb, Target, TrendingUp, Users, ShoppingBag, Plane, Car, Utensils, Dumbbell, Moon, Sun, Cloud, Umbrella, Leaf, Flower2, Smile, FolderOpen, Archive, FileText, Inbox } from 'lucide-react'
+import { X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, FolderOpen, Archive, FileText, Inbox } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
-// Folder color options using our existing color scheme
+// Folder color options - one entry per palette id so each selection shows its actual color
 const FOLDER_COLORS = {
-  blue: { main: '#0A84FF', light: '#3BA1FF', dark: '#0070E0' },
-  purple: { main: '#BF5AF2', light: '#D17FF7', dark: '#A347D1' },
-  pink: { main: '#FF375F', light: '#FF6B8A', dark: '#E0274D' },
   red: { main: '#FF453A', light: '#FF7A72', dark: '#E03830' },
   orange: { main: '#FF9500', light: '#FFB340', dark: '#E08500' },
   yellow: { main: '#FFD60A', light: '#FFE347', dark: '#E0BD00' },
+  lime: { main: '#8BC34A', light: '#A5D66A', dark: '#6B9B3A' },
   green: { main: '#30D158', light: '#5EDE7E', dark: '#28B84C' },
   teal: { main: '#48C9B0', light: '#6DD5C3', dark: '#3AB39B' },
+  cyan: { main: '#32ADE6', light: '#5BC0ED', dark: '#2280B8' },
+  blue: { main: '#0A84FF', light: '#3BA1FF', dark: '#0070E0' },
+  indigo: { main: '#5856D6', light: '#7B78E0', dark: '#3D3BA8' },
+  purple: { main: '#BF5AF2', light: '#D17FF7', dark: '#A347D1' },
+  pink: { main: '#FF375F', light: '#FF6B8A', dark: '#E0274D' },
+  magenta: { main: '#FF2D92', light: '#FF5AA8', dark: '#CC2575' },
+  mint: { main: '#A5D6A7', light: '#C5E8C6', dark: '#7AB07C' },
+  sky: { main: '#81D4FA', light: '#A8E2FC', dark: '#5AB0E0' },
   gray: { main: '#8E8E93', light: '#AEAEB2', dark: '#7A7A7E' },
+  white: { main: '#E5E5EA', light: '#F2F2F7', dark: '#C7C7CC' },
 }
 
-// Extended color palette like GoodNotes
+// Color palette (same as NoteCard; each id maps to a folder color key)
 const COLOR_PALETTE = [
-  // Row 1 - Rainbow spectrum
   { id: 'red', color: '#FF453A' },
   { id: 'orange', color: '#FF9500' },
   { id: 'yellow', color: '#FFD60A' },
@@ -32,24 +38,15 @@ const COLOR_PALETTE = [
   { id: 'purple', color: '#BF5AF2' },
   { id: 'pink', color: '#FF375F' },
   { id: 'magenta', color: '#FF2D92' },
-  // Row 2 - Pastels and neutrals
-  { id: 'peach', color: '#FFAB91' },
-  { id: 'cream', color: '#FFE0B2' },
   { id: 'mint', color: '#A5D6A7' },
   { id: 'sky', color: '#81D4FA' },
-  { id: 'lavender', color: '#CE93D8' },
-  { id: 'rose', color: '#F48FB1' },
-  { id: 'brown', color: '#A1887F' },
   { id: 'gray', color: '#8E8E93' },
-  { id: 'slate', color: '#546E7A' },
-  { id: 'charcoal', color: '#37474F' },
   { id: 'white', color: '#FFFFFF' },
-  { id: 'black', color: '#1C1C1E' },
 ]
 
 const LABEL_COLOR_OPTIONS = Object.entries(LABEL_COLORS).map(([id, color]) => ({ id, color }))
 
-// Icon options for folders
+// Icon options for folders (18 total)
 const FOLDER_ICON_OPTIONS = [
   { id: 'none', icon: null, label: 'None' },
   { id: 'folder', icon: FolderOpen, label: 'Folder' },
@@ -69,23 +66,6 @@ const FOLDER_ICON_OPTIONS = [
   { id: 'zap', icon: Zap, label: 'Zap' },
   { id: 'bookmark', icon: Bookmark, label: 'Bookmark' },
   { id: 'award', icon: Award, label: 'Award' },
-  { id: 'flag', icon: Flag, label: 'Flag' },
-  { id: 'home', icon: Home, label: 'Home' },
-  { id: 'briefcase', icon: Briefcase, label: 'Work' },
-  { id: 'graduation', icon: GraduationCap, label: 'School' },
-  { id: 'lightbulb', icon: Lightbulb, label: 'Ideas' },
-  { id: 'target', icon: Target, label: 'Goals' },
-  { id: 'trending', icon: TrendingUp, label: 'Progress' },
-  { id: 'users', icon: Users, label: 'Team' },
-  { id: 'shopping', icon: ShoppingBag, label: 'Shopping' },
-  { id: 'plane', icon: Plane, label: 'Travel' },
-  { id: 'car', icon: Car, label: 'Car' },
-  { id: 'food', icon: Utensils, label: 'Food' },
-  { id: 'fitness', icon: Dumbbell, label: 'Fitness' },
-  { id: 'moon', icon: Moon, label: 'Night' },
-  { id: 'sun', icon: Sun, label: 'Day' },
-  { id: 'cloud', icon: Cloud, label: 'Weather' },
-  { id: 'smile', icon: Smile, label: 'Happy' },
 ]
 
 export default function FolderCard({ folder, noteCount = 0, onClick, onDelete }) {
@@ -267,15 +247,7 @@ function FolderEditMenu({
 
   const handleColorSelect = (colorId) => {
     setSelectedColor(colorId)
-    // Map extended palette to folder colors (use closest match)
-    const folderColorMap = {
-      red: 'red', orange: 'orange', yellow: 'yellow', lime: 'green', green: 'green',
-      teal: 'teal', cyan: 'blue', blue: 'blue', indigo: 'purple', purple: 'purple',
-      pink: 'pink', magenta: 'pink', peach: 'orange', cream: 'yellow', mint: 'green',
-      sky: 'blue', lavender: 'purple', rose: 'pink', brown: 'gray', gray: 'gray',
-      slate: 'gray', charcoal: 'gray', white: 'gray', black: 'gray'
-    }
-    updateFolder(folder.id, { colorKey: folderColorMap[colorId] || 'blue' })
+    updateFolder(folder.id, { colorKey: colorId })
   }
 
   const handleIconSelect = (iconId) => {
@@ -298,16 +270,16 @@ function FolderEditMenu({
     setNewLabelName('')
     setNewLabelColor('blue')
     setShowNewLabelInput(false)
-    addToast({ message: `Label "${newLabelName.trim()}" created` })
+    addToast({ type: 'success', message: `Label "${newLabelName.trim()}" created` })
   }
 
   const handleMove = () => {
-    addToast({ message: 'Move feature coming soon' })
+    addToast({ type: 'info', message: 'Move feature coming soon' })
     onClose()
   }
 
   const handleExport = () => {
-    addToast({ message: 'Export feature coming soon' })
+    addToast({ type: 'info', message: 'Export feature coming soon' })
     onClose()
   }
 
@@ -384,10 +356,10 @@ function FolderEditMenu({
           {/* Image Tab */}
           {activeTab === 'image' && (
             <div className="bg-[#1C1C1E] rounded-xl p-4">
-              <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-[#3A3A3C] rounded-xl">
-                <ImageIcon set="broken" size={40} stroke="regular" primaryColor="#8E8E93" />
-                <p className="text-[#8E8E93] text-sm mt-2">Add Cover Image</p>
-                <button className="mt-3 px-4 py-2 bg-[#0A84FF] text-white text-sm font-medium rounded-lg hover:bg-[#0A84FF]/80 transition-colors">
+              <div className="h-14 flex flex-row items-center justify-center gap-2 border-2 border-dashed border-[#3A3A3C] rounded-xl px-3">
+                <ImageIcon set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
+                <p className="text-[#8E8E93] text-xs">Add Cover Image</p>
+                <button className="px-3 py-1.5 bg-[#0A84FF] text-white text-xs font-medium rounded-lg hover:bg-[#0A84FF]/80 transition-colors">
                   Choose Image
                 </button>
               </div>
@@ -398,7 +370,7 @@ function FolderEditMenu({
           {activeTab === 'color' && (
             <div className="bg-[#1C1C1E] rounded-xl p-4">
               {/* Color Grid */}
-              <div className="grid grid-cols-12 gap-2">
+              <div className="grid grid-cols-8 gap-3">
                 {COLOR_PALETTE.map((opt) => (
                   <button
                     key={opt.id}
@@ -410,22 +382,11 @@ function FolderEditMenu({
                   >
                     {selectedColor === opt.id && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Check size={14} className={opt.id === 'white' || opt.id === 'cream' ? 'text-gray-800' : 'text-white'} strokeWidth={3} />
+                        <Check size={14} className={opt.id === 'white' ? 'text-gray-800' : 'text-white'} strokeWidth={3} />
                       </div>
                     )}
                   </button>
                 ))}
-              </div>
-              
-              {/* Opacity Slider (visual only for now) */}
-              <div className="mt-4 pt-3 border-t border-[#3A3A3C]">
-                <div className="flex items-center gap-3">
-                  <span className="text-[#8E8E93] text-sm">Opacity</span>
-                  <div className="flex-1 h-2 bg-gradient-to-r from-transparent to-white rounded-full relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-[#0A84FF]" />
-                  </div>
-                  <span className="text-white text-sm w-10 text-right">100%</span>
-                </div>
               </div>
             </div>
           )}
@@ -605,4 +566,4 @@ function FolderEditMenu({
   )
 }
 
-export { FOLDER_COLORS, FOLDER_ICON_OPTIONS }
+export { FOLDER_COLORS, COLOR_PALETTE, FOLDER_ICON_OPTIONS }

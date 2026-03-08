@@ -319,13 +319,13 @@ export default function NoteEditor({ onClose }) {
                         <span className="text-[15px]">Stylus & Palm Rejection</span>
                       </button>
 
-                      {/* Document Editing */}
+                      {/* Task Editing */}
                       <button
-                        onClick={() => { addToast({ message: 'Document editing coming soon' }); setShowMenu(false) }}
+                        onClick={() => { addToast({ message: 'Task editing coming soon' }); setShowMenu(false) }}
                         className="w-full px-4 py-3 flex items-center gap-3 text-white hover:bg-[#2A2A2C] transition-colors"
                       >
                         <SlidersHorizontal size={20} className="text-[#8E8E93]" />
-                        <span className="text-[15px]">Document Editing</span>
+                        <span className="text-[15px]">Task Editing</span>
                       </button>
                     </div>
                   </div>

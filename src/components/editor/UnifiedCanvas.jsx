@@ -1078,7 +1078,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
                 </button>
                 <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
                   <ScanLine size={20} className="text-[#8E8E93]" />
-                  <span className="text-white text-[15px]">Scan Documents</span>
+                  <span className="text-white text-[15px]">Scan Tasks</span>
                 </button>
                 <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]">
                   <Camera size={20} className="text-[#8E8E93]" />

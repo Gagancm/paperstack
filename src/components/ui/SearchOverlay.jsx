@@ -3,8 +3,24 @@ import { Search } from 'react-iconly'
 import { X, Star, Folder, TrendingUp } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
 
+const SEARCH_PLACEHOLDERS = [
+  'Search notes, folders, labels...',
+  "Looking for that one note you swear you wrote...",
+  "Searching for meaning (and your notes).",
+  "What did I even call that note?",
+  "Type something. We'll pretend we know where it is.",
+  "Search: the eternal quest for the note you wrote yesterday.",
+  "Find it before it finds you.",
+  "Search notes. Or search your soul. We don't judge.",
+  "The answer is in here. Probably.",
+  "Lost a thought? We've got a search bar.",
+]
+
+const ROTATE_PLACEHOLDER_MS = 60_000 // 1 minute
+
 export default function SearchOverlay({ isOpen, onClose }) {
   const [query, setQuery] = useState('')
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const inputRef = useRef(null)
   
   const {
@@ -27,6 +43,15 @@ export default function SearchOverlay({ isOpen, onClose }) {
       setQuery(searchQuery)
     }
   }, [isOpen, searchQuery])
+
+  // Rotate placeholder joke every few seconds while overlay is open
+  useEffect(() => {
+    if (!isOpen) return
+    const id = setInterval(() => {
+      setPlaceholderIndex((i) => (i + 1) % SEARCH_PLACEHOLDERS.length)
+    }, ROTATE_PLACEHOLDER_MS)
+    return () => clearInterval(id)
+  }, [isOpen])
 
   // Handle escape key
   useEffect(() => {
@@ -100,7 +125,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
             type="text"
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search notes, folders, labels..."
+            placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
             className="flex-1 bg-transparent text-white placeholder-[#6E6E73] outline-none text-[15px]"
             autoFocus
           />

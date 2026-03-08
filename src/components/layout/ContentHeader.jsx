@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Filter, Plus, ChevronDown, Category, ChevronRight, Document, Folder, Edit, Scan, Image as ImageIcon, Camera, Star, Delete } from 'react-iconly'
-import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen, ChevronLeft, Tag, Trash2, X } from 'lucide-react'
-import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES } from '../../store/appStore'
+import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen, ChevronLeft, Tag, X } from 'lucide-react'
+import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES, effectiveDocType } from '../../store/appStore'
 import NewNoteModal from '../ui/NewNoteModal'
 import NewFolderModal from '../ui/NewFolderModal'
 
@@ -14,6 +14,7 @@ export default function ContentHeader() {
   const [cloudMenuOpen, setCloudMenuOpen] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [showNewNoteModal, setShowNewNoteModal] = useState(false)
+  const [newNoteType, setNewNoteType] = useState('notebook')
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
   const [showNewLabelInput, setShowNewLabelInput] = useState(false)
   const [newLabelName, setNewLabelName] = useState('')
@@ -24,6 +25,9 @@ export default function ContentHeader() {
     activeFilter,
     setActiveFilter,
     activeDocumentType,
+    setActiveDocumentType,
+    trashFavoritesSubFilter,
+    setTrashFavoritesSubFilter,
     labels,
     selectedFolderId,
     folders,
@@ -40,14 +44,10 @@ export default function ContentHeader() {
     createLabel,
     notes,
     getNotesCountByLabel,
+    getNotesCountByDocumentType,
   } = useAppStore()
 
   const selectedFolder = folders.find(f => f.id === selectedFolderId)
-
-  // Calculate counts
-  const allNotesCount = notes.filter(n => !n.inTrash && (n.documentType || 'notebook') === activeDocumentType).length
-  const favoritesCount = notes.filter(n => !n.inTrash && n.pinned && (n.documentType || 'notebook') === activeDocumentType).length
-  const trashCount = notes.filter(n => n.inTrash).length
 
   // Get current document type info
   const currentDocType = DOCUMENT_TYPES[activeDocumentType] || DOCUMENT_TYPES.notebook
@@ -59,9 +59,11 @@ export default function ContentHeader() {
   }, [showNewLabelInput])
 
   const getFilterLabel = () => {
-    if (activeFilter === 'all') return 'All'
-    if (activeFilter === 'favorites') return 'Favorites'
-    if (activeFilter === 'trash') return 'Trash'
+    if (activeFilter === 'favorites' || activeFilter === 'trash') {
+      const subLabels = { all: 'All', notebook: 'Notebooks', whiteboard: 'Whiteboard', task: 'Tasks' }
+      return subLabels[trashFavoritesSubFilter] || 'All'
+    }
+    if (activeFilter === 'all') return currentDocType.label
     const label = labels.find((l) => l.id === activeFilter)
     return label?.name || 'All'
   }
@@ -101,6 +103,19 @@ export default function ContentHeader() {
 
   const handleNewNotebook = () => {
     setNewMenuOpen(false)
+    setNewNoteType('notebook')
+    setShowNewNoteModal(true)
+  }
+
+  const handleNewTask = () => {
+    setNewMenuOpen(false)
+    setNewNoteType('task')
+    setShowNewNoteModal(true)
+  }
+
+  const handleNewWhiteboard = () => {
+    setNewMenuOpen(false)
+    setNewNoteType('whiteboard')
     setShowNewNoteModal(true)
   }
 
@@ -110,50 +125,73 @@ export default function ContentHeader() {
   }
 
   const handleImport = () => {
-    addToast({ message: 'Import feature coming soon' })
+    addToast({ type: 'info', message: 'Import feature coming soon' })
     setNewMenuOpen(false)
   }
 
   const handleCreateLabel = () => {
     if (!newLabelName.trim()) return
     createLabel(newLabelName.trim(), newLabelColor)
-    addToast({ message: `Label "${newLabelName.trim()}" created` })
+    addToast({ type: 'success', message: `Label "${newLabelName.trim()}" created` })
     setNewLabelName('')
     setNewLabelColor('blue')
     setShowNewLabelInput(false)
   }
 
   const handleFilterSelect = (filterId) => {
-    setActiveFilter(filterId)
+    if (activeFilter === 'trash' || activeFilter === 'favorites') {
+      setTrashFavoritesSubFilter(filterId === 'all' ? 'all' : filterId)
+    } else if (filterId === 'notebook' || filterId === 'whiteboard' || filterId === 'task') {
+      setActiveDocumentType(filterId)
+      setActiveFilter('all')
+    } else {
+      setActiveFilter(filterId)
+    }
     setFilterOpen(false)
   }
+
+  const isTrashOrFavorites = activeFilter === 'trash' || activeFilter === 'favorites'
+  const trashNotebookCount = notes.filter((n) => n.inTrash && effectiveDocType(n) === 'notebook').length
+  const trashWhiteboardCount = notes.filter((n) => n.inTrash && effectiveDocType(n) === 'whiteboard').length
+  const trashTaskCount = notes.filter((n) => n.inTrash && effectiveDocType(n) === 'task').length
+  const favNotebookCount = notes.filter((n) => !n.inTrash && n.pinned && effectiveDocType(n) === 'notebook').length
+  const favWhiteboardCount = notes.filter((n) => !n.inTrash && n.pinned && effectiveDocType(n) === 'whiteboard').length
+  const favTaskCount = notes.filter((n) => !n.inTrash && n.pinned && effectiveDocType(n) === 'task').length
+  const trashAllCount = notes.filter((n) => n.inTrash).length
+  const favAllCount = notes.filter((n) => !n.inTrash && n.pinned).length
 
   return (
     <>
       <div className="bg-[#1C1C1E]">
-        {/* Title row - only show when not in folder */}
+        {/* Title row - show Trash/Favorites when those views, else document type (only when not in folder) */}
         {!selectedFolderId && (
           <div className="px-[30px] py-4">
-            <h1 className="text-2xl font-bold text-white">{currentDocType.label}</h1>
+            <h1 className="text-2xl font-bold text-white">
+              {activeFilter === 'trash' ? 'Trash' : activeFilter === 'favorites' ? 'Favorites' : currentDocType.label}
+            </h1>
           </div>
         )}
 
-        {/* Controls row - aligns with sidebar nav items */}
+        {/* Controls row - same horizontal padding as TopBar (30px) for equal left/right spacing */}
         <div className={`flex items-center px-[30px] ${selectedFolderId ? 'py-3' : 'pb-4'}`}>
           {/* Left side - Filter dropdown */}
-          <div className="flex items-center flex-1">
+          <div className="flex items-center flex-1 min-w-0">
             <div className="relative">
               <button
                 onClick={() => setFilterOpen(!filterOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-lg hover:bg-[#3A3A3C] transition-colors"
+                className={`flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-lg hover:bg-[#3A3A3C] transition-colors ${!isTrashOrFavorites ? 'gap-0' : ''}`}
               >
                 <div className="text-[#8E8E93]">
                   <Filter set="broken" size={16} stroke="regular" />
                 </div>
-                <span className="text-white text-sm">{getFilterLabel()}</span>
-                <div className="text-[#8E8E93]">
-                  <ChevronDown set="broken" size={14} stroke="regular" />
-                </div>
+                {isTrashOrFavorites && (
+                  <>
+                    <span className="text-white text-sm">{getFilterLabel()}</span>
+                    <div className="text-[#8E8E93]">
+                      <ChevronDown set="broken" size={14} stroke="regular" />
+                    </div>
+                  </>
+                )}
               </button>
               
               {filterOpen && (
@@ -161,67 +199,62 @@ export default function ContentHeader() {
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
                   <div className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
                     
-                    {/* Quick Filters Section */}
-                    <div className="p-3 pb-2">
-                      <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
-                        Quick Filters
-                      </p>
-                      <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
-                        {/* All Notes */}
-                        <button
-                          onClick={() => handleFilterSelect('all')}
-                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText size={20} className="text-[#8E8E93]" />
-                            <span className="text-white text-[15px]">All {currentDocType.label}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#8E8E93] text-[13px]">{allNotesCount}</span>
-                            {activeFilter === 'all' && (
-                              <Check size={18} className="text-[#0A84FF]" />
-                            )}
-                          </div>
-                        </button>
-
-                        {/* Favorites */}
-                        <button
-                          onClick={() => handleFilterSelect('favorites')}
-                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Star set="bold" size={20} primaryColor="#FFD60A" />
-                            <span className="text-white text-[15px]">Favorites</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#8E8E93] text-[13px]">{favoritesCount}</span>
-                            {activeFilter === 'favorites' && (
-                              <Check size={18} className="text-[#0A84FF]" />
-                            )}
-                          </div>
-                        </button>
-
-                        {/* Trash */}
-                        <button
-                          onClick={() => handleFilterSelect('trash')}
-                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Trash2 size={20} className="text-[#FF453A]" />
-                            <span className="text-white text-[15px]">Trash</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#8E8E93] text-[13px]">{trashCount}</span>
-                            {activeFilter === 'trash' && (
-                              <Check size={18} className="text-[#0A84FF]" />
-                            )}
-                          </div>
-                        </button>
+                    {/* Trash/Favorites: Quick Filters (All, Notebooks, Whiteboard, Tasks) - no Labels */}
+                    {isTrashOrFavorites && (
+                      <div className="p-3 pb-3">
+                        <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
+                          Quick Filters
+                        </p>
+                        <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+                          <button
+                            onClick={() => handleFilterSelect('all')}
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText size={20} className={trashFavoritesSubFilter === 'all' ? 'text-[#0A84FF]' : 'text-[#8E8E93]'} />
+                              <span className="text-white text-[15px]">All</span>
+                            </div>
+                            <span className="text-[#8E8E93] text-[13px]">{activeFilter === 'trash' ? trashAllCount : favAllCount}</span>
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect('notebook')}
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Document set="broken" size={20} stroke="regular" primaryColor={trashFavoritesSubFilter === 'notebook' ? '#0A84FF' : '#8E8E93'} />
+                              <span className="text-white text-[15px]">Notebooks</span>
+                            </div>
+                            <span className="text-[#8E8E93] text-[13px]">{activeFilter === 'trash' ? trashNotebookCount : favNotebookCount}</span>
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect('whiteboard')}
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Layout size={20} className={trashFavoritesSubFilter === 'whiteboard' ? 'text-[#0A84FF]' : 'text-[#8E8E93]'} />
+                              <span className="text-white text-[15px]">Whiteboard</span>
+                            </div>
+                            <span className="text-[#8E8E93] text-[13px]">{activeFilter === 'trash' ? trashWhiteboardCount : favWhiteboardCount}</span>
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect('task')}
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText size={20} className={trashFavoritesSubFilter === 'task' ? 'text-[#0A84FF]' : 'text-[#8E8E93]'} />
+                              <span className="text-white text-[15px]">Tasks</span>
+                            </div>
+                            <span className="text-[#8E8E93] text-[13px]">{activeFilter === 'trash' ? trashTaskCount : favTaskCount}</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
+                    {/* Notebook/Task/Whiteboard: Labels and Create new label only */}
+                    {!isTrashOrFavorites && (
+                    <>
                     {/* Labels Section */}
-                    <div className="px-3 pb-3">
+                    <div className="px-3 pt-3 pb-3">
                       <p className="text-[#8E8E93] text-[11px] uppercase tracking-wide mb-2 px-1">
                         Labels
                       </p>
@@ -327,6 +360,8 @@ export default function ContentHeader() {
                         </div>
                       )}
                     </div>
+                    </>
+                    )}
                   </div>
                 </>
               )}
@@ -340,8 +375,8 @@ export default function ContentHeader() {
             </div>
           )}
 
-          {/* Right controls */}
-          <div className={`flex items-center gap-1 ${selectedFolder ? 'flex-1 justify-end' : ''}`}>
+          {/* Right controls - same row, vertically centered */}
+          <div className={`flex items-center gap-2 ${selectedFolder ? 'flex-1 justify-end' : ''}`}>
             {/* New button with expanded menu */}
             <div className="relative">
               <button
@@ -374,28 +409,20 @@ export default function ContentHeader() {
                           <span className="text-white text-[12px]">Notebook</span>
                         </button>
 
-                        {/* Text Doc */}
+                        {/* Task */}
                         <button
-                          onClick={() => {
-                            const noteId = createNote('document')
-                            selectNote(noteId)
-                            setNewMenuOpen(false)
-                          }}
+                          onClick={handleNewTask}
                           className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
                             <FileText size={22} className="text-[#30D158]" />
                           </div>
-                          <span className="text-white text-[12px]">Document</span>
+                          <span className="text-white text-[12px]">Task</span>
                         </button>
 
                         {/* Whiteboard */}
                         <button
-                          onClick={() => {
-                            const noteId = createNote('whiteboard')
-                            selectNote(noteId)
-                            setNewMenuOpen(false)
-                          }}
+                          onClick={handleNewWhiteboard}
                           className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
                         >
                           <div className="w-11 h-11 bg-[#1C1C1E] rounded-xl flex items-center justify-center">
@@ -419,7 +446,7 @@ export default function ContentHeader() {
 
                         <button
                           onClick={() => {
-                            addToast({ message: 'Quick Record coming soon' })
+                            addToast({ type: 'info', message: 'Quick Record coming soon' })
                             setNewMenuOpen(false)
                           }}
                           className="w-[88px] h-[76px] flex flex-col items-center justify-center gap-2 rounded-xl hover:bg-[#3A3A3C] transition-colors"
@@ -447,22 +474,22 @@ export default function ContentHeader() {
                           <span className="text-white text-[15px]">QuickNote</span>
                         </button>
 
-                        {/* Scan Documents */}
+                        {/* Scan Tasks */}
                         <button
                           onClick={() => {
-                            addToast({ message: 'Scan Documents coming soon' })
+                            addToast({ type: 'info', message: 'Scan Tasks coming soon' })
                             setNewMenuOpen(false)
                           }}
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
                         >
                           <Scan set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
-                          <span className="text-white text-[15px]">Scan Documents</span>
+                          <span className="text-white text-[15px]">Scan Tasks</span>
                         </button>
 
                         {/* Study Set */}
                         <button
                           onClick={() => {
-                            addToast({ message: 'Study Set coming soon' })
+                            addToast({ type: 'info', message: 'Study Set coming soon' })
                             setNewMenuOpen(false)
                           }}
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
@@ -474,7 +501,7 @@ export default function ContentHeader() {
                         {/* Image */}
                         <button
                           onClick={() => {
-                            addToast({ message: 'Image import coming soon' })
+                            addToast({ type: 'info', message: 'Image import coming soon' })
                             setNewMenuOpen(false)
                           }}
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors border-b border-[#3A3A3C]"
@@ -486,7 +513,7 @@ export default function ContentHeader() {
                         {/* Take Photo */}
                         <button
                           onClick={() => {
-                            addToast({ message: 'Take Photo coming soon' })
+                            addToast({ type: 'info', message: 'Take Photo coming soon' })
                             setNewMenuOpen(false)
                           }}
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2A2A2C] transition-colors"
@@ -518,15 +545,17 @@ export default function ContentHeader() {
             </div>
 
             {/* View options dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setViewMenuOpen(!viewMenuOpen)}
-                className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93]"
-              >
-                <Category set="broken" size={18} stroke="regular" />
-              </button>
+            {/* 2-col icon strip (88px) - aligns with TopBar bell | profile */}
+            <div className="w-[88px] shrink-0 grid grid-cols-2 gap-0 items-center justify-items-center">
+              <div className="relative flex items-center justify-center w-10 h-10">
+                <button 
+                  onClick={() => setViewMenuOpen(!viewMenuOpen)}
+                  className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93]"
+                >
+                  <Category set="broken" size={18} stroke="regular" />
+                </button>
 
-              {viewMenuOpen && (
+                {viewMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setViewMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[240px] overflow-hidden border border-[#3A3A3C]">
@@ -594,22 +623,18 @@ export default function ContentHeader() {
                     </div>
                   </div>
                 </>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Divider */}
-            <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
+              <div className="flex items-center justify-center w-10 h-10">
+                <button 
+                  onClick={() => setCloudMenuOpen(!cloudMenuOpen)}
+                  className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
+                >
+                  <Cloud size={18} className={isSyncing ? 'text-[#0A84FF] animate-pulse' : 'text-[#8E8E93]'} />
+                </button>
 
-            {/* Google Drive Sync dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setCloudMenuOpen(!cloudMenuOpen)}
-                className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
-              >
-                <Cloud size={18} className={isSyncing ? 'text-[#0A84FF] animate-pulse' : 'text-[#8E8E93]'} />
-              </button>
-
-              {cloudMenuOpen && (
+                {cloudMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setCloudMenuOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[280px] overflow-hidden border border-[#3A3A3C]">
@@ -663,7 +688,7 @@ export default function ContentHeader() {
 
                         <button
                           onClick={() => {
-                            addToast({ message: 'Sync settings coming soon' })
+                            addToast({ type: 'info', message: 'Sync settings coming soon' })
                             setCloudMenuOpen(false)
                           }}
                           className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#2A2A2C] transition-colors"
@@ -679,12 +704,13 @@ export default function ContentHeader() {
                   </div>
                 </>
               )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <NewNoteModal isOpen={showNewNoteModal} onClose={() => setShowNewNoteModal(false)} />
+      <NewNoteModal isOpen={showNewNoteModal} onClose={() => setShowNewNoteModal(false)} documentType={newNoteType} />
       <NewFolderModal isOpen={showNewFolderModal} onClose={() => setShowNewFolderModal(false)} />
     </>
   )

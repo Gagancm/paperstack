@@ -17,8 +17,12 @@ export const LABEL_COLORS = {
 export const DOCUMENT_TYPES = {
   notebook: { id: 'notebook', label: 'Notebooks', icon: '📓', description: 'Fixed pages with drawing + text' },
   whiteboard: { id: 'whiteboard', label: 'Whiteboard', icon: '⬜', description: 'Infinite canvas for mind maps' },
-  document: { id: 'document', label: 'Documents', icon: '📄', description: 'Typing-focused text documents' },
+  task: { id: 'task', label: 'Tasks', icon: '📄', description: 'Typing-focused tasks' },
 }
+
+// Normalize legacy 'document' type to 'task' for persisted data (export for use in components)
+export const effectiveDocType = (note) =>
+  note.documentType === 'document' ? 'task' : (note.documentType || 'notebook')
 
 // Initial demo labels
 const initialLabels = [
@@ -49,12 +53,13 @@ export const useAppStore = create(
       theme: 'dark', // 'light', 'dark', or 'system'
       editorMode: 'type', // 'type' or 'draw'
       defaultPenTool: 'ballpoint',
-      activeDocumentType: 'notebook', // 'notebook', 'whiteboard', 'document'
+      activeDocumentType: 'notebook', // 'notebook', 'whiteboard', 'task'
 
       // Notes state
       notes: [],
       selectedNoteId: null,
       activeFilter: 'all', // 'all', 'favorites', 'trash', or label id
+      trashFavoritesSubFilter: 'all', // 'all' | 'notebook' | 'task' | 'whiteboard' - filter by type within trash/favorites
       searchQuery: '',
       selectedFolderId: null, // Currently selected folder for filtering
 
@@ -70,6 +75,9 @@ export const useAppStore = create(
 
       // Toast notifications
       toasts: [],
+
+      // Notifications (persistent)
+      notifications: [],
 
       // Actions - Auth
       setAuthenticated: (value) => set({ isAuthenticated: value }),
@@ -91,7 +99,7 @@ export const useAppStore = create(
         const typeLabels = {
           notebook: 'Untitled Notebook',
           whiteboard: 'Untitled Whiteboard',
-          document: 'Untitled Document',
+          task: 'Untitled Task',
         }
         const newNote = {
           id: generateId(),
@@ -117,6 +125,11 @@ export const useAppStore = create(
         set((state) => ({
           notes: [newNote, ...state.notes],
         }))
+        // Add notification
+        get().addNotification({
+          type: 'note_created',
+          message: `New ${documentType} created`,
+        })
         return newNote.id
       },
 
@@ -131,14 +144,19 @@ export const useAppStore = create(
       },
 
       deleteNote: (id) => {
+        const state = get()
+        const note = state.notes.find((n) => n.id === id)
+        const noteTitle = note?.title || 'Untitled'
+        
         set((state) => ({
           notes: state.notes.map((note) =>
             note.id === id ? { ...note, inTrash: true } : note
           ),
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
         }))
-        // Show undo toast
+        // Show undo toast (no notification needed - toast has undo action)
         get().addToast({
+          type: 'delete',
           message: 'Note moved to trash',
           action: {
             label: 'Undo',
@@ -192,7 +210,12 @@ export const useAppStore = create(
 
       setSearchQuery: (query) => set({ searchQuery: query }),
 
-      setActiveFilter: (filter) => set({ activeFilter: filter, selectedFolderId: null }),
+      setActiveFilter: (filter) => set({
+        activeFilter: filter,
+        selectedFolderId: null,
+        ...(filter === 'trash' || filter === 'favorites' ? { trashFavoritesSubFilter: 'all' } : {}),
+      }),
+      setTrashFavoritesSubFilter: (subFilter) => set({ trashFavoritesSubFilter: subFilter }),
 
       setSelectedFolder: (folderId) => set({ selectedFolderId: folderId }),
 
@@ -212,6 +235,11 @@ export const useAppStore = create(
         set((state) => ({
           folders: [newFolder, ...state.folders],
         }))
+        // Add notification
+        get().addNotification({
+          type: 'folder_created',
+          message: `Folder "${name}" created`,
+        })
         return newFolder.id
       },
 
@@ -261,6 +289,11 @@ export const useAppStore = create(
         set((state) => ({
           labels: [...state.labels, newLabel],
         }))
+        // Add notification
+        get().addNotification({
+          type: 'label_added',
+          message: `Label "${name}" created`,
+        })
         return newLabel.id
       },
 
@@ -327,32 +360,76 @@ export const useAppStore = create(
         }))
       },
 
+      // Actions - Notifications
+      addNotification: (notification) => {
+        const id = generateId()
+        const newNotification = {
+          ...notification,
+          id,
+          read: false,
+          createdAt: new Date().toISOString(),
+        }
+        set((state) => ({
+          notifications: [newNotification, ...state.notifications].slice(0, 50), // Keep last 50
+        }))
+        return id
+      },
+
+      markNotificationRead: (id) => {
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
+          ),
+        }))
+      },
+
+      markAllNotificationsRead: () => {
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        }))
+      },
+
+      clearAllNotifications: () => {
+        set({ notifications: [] })
+      },
+
+      getUnreadNotificationCount: () => {
+        return get().notifications.filter((n) => !n.read).length
+      },
+
       // Computed/Derived state helpers
       getFilteredNotes: () => {
         const state = get()
         let filtered = state.notes
 
-        // Filter by document type
-        if (state.activeDocumentType) {
-          filtered = filtered.filter((note) => 
-            (note.documentType || 'notebook') === state.activeDocumentType
+        // Filter by document type (skip for Trash and Favorites so sidebar count matches visible items)
+        const isTrashOrFavorites = state.activeFilter === 'trash' || state.activeFilter === 'favorites'
+        if (state.activeDocumentType && !isTrashOrFavorites) {
+          filtered = filtered.filter((note) =>
+            effectiveDocType(note) === state.activeDocumentType
           )
         }
 
-        // Filter by folder
-        if (state.selectedFolderId) {
+        // Filter by folder (only when not in Trash/Favorites)
+        if (state.selectedFolderId && !isTrashOrFavorites) {
           filtered = filtered.filter((note) => note.folderId === state.selectedFolderId)
         }
 
         // Filter by trash/active
         if (state.activeFilter === 'trash') {
           filtered = filtered.filter((note) => note.inTrash)
+          if (state.trashFavoritesSubFilter && state.trashFavoritesSubFilter !== 'all') {
+            filtered = filtered.filter((note) => effectiveDocType(note) === state.trashFavoritesSubFilter)
+          }
         } else {
           filtered = filtered.filter((note) => !note.inTrash)
 
           // Filter by favorites
           if (state.activeFilter === 'favorites') {
             filtered = filtered.filter((note) => note.pinned)
+            if (state.trashFavoritesSubFilter && state.trashFavoritesSubFilter !== 'all') {
+              filtered = filtered.filter((note) => effectiveDocType(note) === state.trashFavoritesSubFilter)
+            }
           }
           // Filter by label
           else if (state.activeFilter !== 'all') {
@@ -420,7 +497,7 @@ export const useAppStore = create(
       getNotesCountByDocumentType: (documentType) => {
         const state = get()
         return state.notes.filter(
-          (note) => !note.inTrash && (note.documentType || 'notebook') === documentType
+          (note) => !note.inTrash && effectiveDocType(note) === documentType
         ).length
       },
 
@@ -499,6 +576,7 @@ export const useAppStore = create(
         sortBy: state.sortBy,
         defaultPenTool: state.defaultPenTool,
         activeDocumentType: state.activeDocumentType,
+        notifications: state.notifications,
       }),
     }
   )
