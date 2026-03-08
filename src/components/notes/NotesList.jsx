@@ -1,8 +1,12 @@
+import { motion } from 'framer-motion'
 import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES, effectiveDocType } from '../../store/appStore'
 import FolderCard from './FolderCard'
 import NoteCard from './NoteCard'
 import { Star, Document } from 'react-iconly'
 import { ChevronDown, Layout, FileText } from 'lucide-react'
+
+const listContainer = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }
+const listItem = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }
 
 export default function NotesList() {
   const {
@@ -78,7 +82,7 @@ export default function NotesList() {
     <div className={`flex-1 bg-[#1C1C1E] flex flex-col min-h-0 ${hasContent ? 'overflow-y-auto' : 'overflow-hidden flex items-center justify-center'}`}>
       <div className={hasContent ? 'py-6 px-[30px]' : 'w-full flex items-center justify-center px-[30px]'}>
         {hasContent ? (
-          <div className="flex flex-col gap-8">
+          <motion.div className="flex flex-col gap-8" variants={listContainer} initial="hidden" animate="show">
             {/* Folders Section */}
             {showFolders && folders.length > 0 && (
               <div>
@@ -86,25 +90,27 @@ export default function NotesList() {
                 {viewMode === 'grid' ? (
                   <div className="flex flex-wrap gap-4">
                     {folders.map((folder) => (
-                      <FolderCard
-                        key={folder.id}
-                        folder={folder}
-                        noteCount={getNotesCountByFolder(folder.id)}
-                        onClick={() => handleFolderClick(folder)}
-                        onDelete={handleDeleteFolder}
-                      />
+                      <motion.div key={folder.id} variants={listItem}>
+                        <FolderCard
+                          folder={folder}
+                          noteCount={getNotesCountByFolder(folder.id)}
+                          onClick={() => handleFolderClick(folder)}
+                          onDelete={handleDeleteFolder}
+                        />
+                      </motion.div>
                     ))}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1">
                     {folders.map((folder) => (
-                      <FolderListItem
-                        key={folder.id}
-                        folder={folder}
-                        noteCount={getNotesCountByFolder(folder.id)}
-                        onClick={() => handleFolderClick(folder)}
-                        formatDate={formatDate}
-                      />
+                      <motion.div key={folder.id} variants={listItem}>
+                        <FolderListItem
+                          folder={folder}
+                          noteCount={getNotesCountByFolder(folder.id)}
+                          onClick={() => handleFolderClick(folder)}
+                          formatDate={formatDate}
+                        />
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -121,25 +127,27 @@ export default function NotesList() {
                       {viewMode === 'grid' ? (
                         <div className="flex flex-wrap gap-4">
                           {typeNotes.map((note) => (
-                            <NoteCard
-                              key={note.id}
-                              note={note}
-                              onClick={selectNote}
-                              isSelected={selectedNoteId === note.id}
-                            />
+                            <motion.div key={note.id} variants={listItem}>
+                              <NoteCard
+                                note={note}
+                                onClick={selectNote}
+                                isSelected={selectedNoteId === note.id}
+                              />
+                            </motion.div>
                           ))}
                         </div>
                       ) : (
                         <div className="flex flex-col gap-1">
                           {typeNotes.map((note) => (
-                            <NoteListItem
-                              key={note.id}
-                              note={note}
-                              onClick={() => selectNote(note.id)}
-                              isSelected={selectedNoteId === note.id}
-                              formatDate={formatDate}
-                              labelObjects={getNoteLabelObjects(note)}
-                            />
+                            <motion.div key={note.id} variants={listItem}>
+                              <NoteListItem
+                                note={note}
+                                onClick={() => selectNote(note.id)}
+                                isSelected={selectedNoteId === note.id}
+                                formatDate={formatDate}
+                                labelObjects={getNoteLabelObjects(note)}
+                              />
+                            </motion.div>
                           ))}
                         </div>
                       )}
@@ -151,25 +159,27 @@ export default function NotesList() {
                     {viewMode === 'grid' ? (
                       <div className="flex flex-wrap gap-4">
                         {filteredNotes.map((note) => (
-                          <NoteCard
-                            key={note.id}
-                            note={note}
-                            onClick={selectNote}
-                            isSelected={selectedNoteId === note.id}
-                          />
+                          <motion.div key={note.id} variants={listItem}>
+                            <NoteCard
+                              note={note}
+                              onClick={selectNote}
+                              isSelected={selectedNoteId === note.id}
+                            />
+                          </motion.div>
                         ))}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1">
                         {filteredNotes.map((note) => (
-                          <NoteListItem
-                            key={note.id}
-                            note={note}
-                            onClick={() => selectNote(note.id)}
-                            isSelected={selectedNoteId === note.id}
-                            formatDate={formatDate}
-                            labelObjects={getNoteLabelObjects(note)}
-                          />
+                          <motion.div key={note.id} variants={listItem}>
+                            <NoteListItem
+                              note={note}
+                              onClick={() => selectNote(note.id)}
+                              isSelected={selectedNoteId === note.id}
+                              formatDate={formatDate}
+                              labelObjects={getNoteLabelObjects(note)}
+                            />
+                          </motion.div>
                         ))}
                       </div>
                     )}
@@ -177,7 +187,7 @@ export default function NotesList() {
                 )}
               </div>
             )}
-          </div>
+          </motion.div>
         ) : (
           <EmptyState docType={docTypeInfo} activeFilter={activeFilter} selectedFolderId={selectedFolderId} />
         )}
@@ -395,11 +405,16 @@ function EmptyState({ docType, activeFilter, selectedFolderId }) {
   const content = getContent()
 
   return (
-    <div className="flex flex-col items-center justify-center text-center max-w-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="flex flex-col items-center justify-center text-center max-w-sm"
+    >
       <div className="text-7xl mb-6 select-none" aria-hidden>{content.illustration}</div>
       <p className="text-xl font-bold text-white mb-2">{content.line1}</p>
       <p className="text-[#8E8E93] text-sm">{content.line2}</p>
-    </div>
+    </motion.div>
   )
 }
 

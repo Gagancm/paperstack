@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Search } from 'react-iconly'
 import { X, Star, Folder, TrendingUp } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
@@ -105,18 +106,33 @@ export default function SearchOverlay({ isOpen, onClose }) {
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 6)
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh]">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-[#2C2C2E] rounded-2xl shadow-2xl border border-[#3A3A3C] overflow-hidden mx-4">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="search-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh]"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleClose}
+          />
+          {/* Panel */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -12 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-2xl bg-[#2C2C2E] rounded-2xl shadow-2xl border border-[#3A3A3C] overflow-hidden mx-4"
+          >
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[#3A3A3C]">
           <Search set="broken" size={20} className="text-[#8E8E93] shrink-0" />
@@ -277,8 +293,10 @@ export default function SearchOverlay({ isOpen, onClose }) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

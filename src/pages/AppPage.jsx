@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAppStore } from '../store/appStore'
 import Sidebar from '../components/layout/Sidebar'
 import TopBar from '../components/layout/TopBar'
@@ -69,22 +70,34 @@ export default function AppPage() {
       </div>
 
       {/* Note Editor Overlay */}
-      {selectedNoteId && (
-        <NoteEditor onClose={handleCloseEditor} />
-      )}
+      <AnimatePresence mode="wait">
+        {selectedNoteId && (
+          <NoteEditor key={selectedNoteId} onClose={handleCloseEditor} />
+        )}
+      </AnimatePresence>
 
       {/* Toast Notifications */}
       <div className="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none">
         <div className="flex flex-col gap-2 pointer-events-auto">
-          {toasts.map((toast) => (
-            <Toast
-              key={toast.id}
-              message={toast.message}
-              action={toast.action}
-              type={toast.type}
-              onClose={() => removeToast(toast.id)}
-            />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {toasts.map((toast) => (
+              <motion.div
+                key={toast.id}
+                layout
+                initial={{ opacity: 0, x: 24, scale: 0.96 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 24, scale: 0.96 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              >
+                <Toast
+                  message={toast.message}
+                  action={toast.action}
+                  type={toast.type}
+                  onClose={() => removeToast(toast.id)}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </div>

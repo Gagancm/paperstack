@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { ChevronLeft, Star, Delete, CloseSquare, TickSquare, MoreSquare, ChevronRight, Bookmark, Send, Swap, Lock, Message, Setting, Edit } from 'react-iconly'
 import { Tag, Copy, ListTree, Trash2, PanelLeft, MoveHorizontal, SlidersHorizontal } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
@@ -85,7 +86,13 @@ export default function NoteEditor({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1C1C1E] flex flex-col">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 bg-[#1C1C1E] flex flex-col"
+    >
       {/* Header - matches home/folder design */}
       <div className="flex items-center px-3 h-11 bg-[#2C2C2E] border-b border-[#3A3A3C]">
         {/* Left: Back button - fixed width for true centering */}
@@ -361,7 +368,7 @@ export default function NoteEditor({ onClose }) {
           updateNote(note.id, { paperColor: color })
         }}
       />
-    </div>
+    </motion.div>
   )
 }
 

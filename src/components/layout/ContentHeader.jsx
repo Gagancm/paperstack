@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Filter, Plus, ChevronDown, Category, ChevronRight, Document, Folder, Edit, Scan, Image as ImageIcon, Camera, Star, Delete } from 'react-iconly'
 import { Cloud, List, Check, CheckCircle2, RefreshCw, FileText, Layout, Download, Mic, BookOpen, ChevronLeft, Tag, X } from 'lucide-react'
 import { useAppStore, LABEL_COLORS, DOCUMENT_TYPES, effectiveDocType } from '../../store/appStore'
@@ -194,10 +195,17 @@ export default function ContentHeader() {
                 )}
               </button>
               
+              <AnimatePresence>
               {filterOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                  <div className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]"
+                  >
                     
                     {/* Trash/Favorites: Quick Filters (All, Notebooks, Whiteboard, Tasks) - no Labels */}
                     {isTrashOrFavorites && (
@@ -362,9 +370,10 @@ export default function ContentHeader() {
                     </div>
                     </>
                     )}
-                  </div>
+                  </motion.div>
                 </>
               )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -387,10 +396,17 @@ export default function ContentHeader() {
                 <span className="text-white text-sm font-medium">New</span>
               </button>
               
+              <AnimatePresence>
               {newMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[320px] overflow-hidden border border-[#3A3A3C]"
+                  >
                     
                     {/* Quick Create Section - Icon Grid */}
                     <div className="p-3 pb-2">
@@ -539,9 +555,10 @@ export default function ContentHeader() {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </>
               )}
+              </AnimatePresence>
             </div>
 
             {/* View options dropdown */}
@@ -555,10 +572,17 @@ export default function ContentHeader() {
                   <Category set="broken" size={18} stroke="regular" />
                 </button>
 
+                <AnimatePresence>
                 {viewMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setViewMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[240px] overflow-hidden border border-[#3A3A3C]">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40" onClick={() => setViewMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[240px] overflow-hidden border border-[#3A3A3C]"
+                  >
                     
                     {/* View Mode Section */}
                     <div className="p-3 pb-2">
@@ -621,12 +645,13 @@ export default function ContentHeader() {
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </>
                 )}
+                </AnimatePresence>
               </div>
 
-              <div className="flex items-center justify-center w-10 h-10">
+              <div className="relative flex items-center justify-center w-10 h-10">
                 <button 
                   onClick={() => setCloudMenuOpen(!cloudMenuOpen)}
                   className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
@@ -634,10 +659,17 @@ export default function ContentHeader() {
                   <Cloud size={18} className={isSyncing ? 'text-[#0A84FF] animate-pulse' : 'text-[#8E8E93]'} />
                 </button>
 
+                <AnimatePresence>
                 {cloudMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setCloudMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[280px] overflow-hidden border border-[#3A3A3C]">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40" onClick={() => setCloudMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 bg-[#2C2C2E] rounded-2xl shadow-xl z-50 w-[280px] overflow-hidden border border-[#3A3A3C]"
+                  >
                     
                     {/* Status Section */}
                     <div className="p-3 pb-2">
@@ -701,9 +733,10 @@ export default function ContentHeader() {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </>
               )}
+              </AnimatePresence>
               </div>
             </div>
           </div>

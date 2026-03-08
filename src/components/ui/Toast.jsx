@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { X, CheckCircle, AlertCircle, Info, Trash2 } from 'lucide-react'
 
 // Get icon based on toast type
@@ -18,21 +17,8 @@ const ToastIcon = ({ type }) => {
 }
 
 export default function Toast({ message, action, type = 'info', onClose }) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [isLeaving, setIsLeaving] = useState(false)
-
-  useEffect(() => {
-    // Trigger enter animation
-    requestAnimationFrame(() => {
-      setIsVisible(true)
-    })
-  }, [])
-
   const handleClose = () => {
-    setIsLeaving(true)
-    setTimeout(() => {
-      onClose()
-    }, 200)
+    onClose()
   }
 
   const handleAction = () => {
@@ -43,14 +29,7 @@ export default function Toast({ message, action, type = 'info', onClose }) {
   }
 
   return (
-    <div 
-      className={`
-        bg-[#2C2C2E] rounded-xl px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[400px]
-        shadow-2xl border border-[#3A3A3C]
-        transform transition-all duration-200 ease-out
-        ${isVisible && !isLeaving ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}
-      `}
-    >
+    <div className="bg-[#2C2C2E] rounded-xl px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[400px] shadow-2xl border border-[#3A3A3C]">
       {/* Icon */}
       <div className="shrink-0">
         <ToastIcon type={type} />

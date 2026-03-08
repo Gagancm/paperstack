@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Star, Folder, Delete, Image as ImageIcon, TickSquare } from 'react-iconly'
 import { Copy, X, Check, Upload, Plus, Tag, Palette, Grid, Heart, Calendar, Globe, Bell, BookOpen, Music, Camera, Film, Coffee, Zap, Bookmark, Award, Flag, Home, Briefcase, GraduationCap, RotateCcw, Trash2 } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
@@ -120,10 +121,13 @@ export default function NoteCard({ note, onClick, isSelected }) {
   const IconComponent = noteIcon ? ICON_OPTIONS.find(i => i.id === noteIcon)?.icon : null
 
   return (
-    <div 
+    <motion.div 
       className="flex flex-col items-center cursor-pointer group"
       onClick={handleCardClick}
       style={{ width: '120px' }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
     >
       {/* Notebook graphic - taller portrait style like Goodnotes */}
       <div className={`relative w-[90px] h-[115px] mb-2 ${isSelected ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#1C1C1E] rounded-lg' : ''}`}>
@@ -228,7 +232,7 @@ export default function NoteCard({ note, onClick, isSelected }) {
         />,
         document.body
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -394,9 +398,10 @@ function NoteEditMenu({
               const TabIcon = tab.icon
               const isActive = activeTab === tab.id
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  whileTap={{ scale: 0.97 }}
                   className={`flex-1 py-2.5 rounded-lg flex flex-col items-center gap-1 transition-colors ${
                     isActive 
                       ? 'bg-[#3A3A3C] text-white' 
@@ -409,17 +414,18 @@ function NoteEditMenu({
                     <TabIcon size={20} />
                   )}
                   <span className="text-[11px] font-medium">{tab.label}</span>
-                </button>
+                </motion.button>
               )
             })}
           </div>
         </div>
 
         {/* Tab Content */}
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 relative min-h-[100px]">
+          <AnimatePresence mode="wait">
           {/* Image Tab */}
           {activeTab === 'image' && (
-            <div className="bg-[#1C1C1E] rounded-xl p-4">
+            <motion.div key="image" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.18 }} className="bg-[#1C1C1E] rounded-xl p-4">
               <div className="h-14 flex flex-row items-center justify-center gap-2 border-2 border-dashed border-[#3A3A3C] rounded-xl px-3">
                 <ImageIcon set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                 <p className="text-[#8E8E93] text-xs">Add Cover Image</p>
@@ -427,12 +433,12 @@ function NoteEditMenu({
                   Choose Image
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Color Tab */}
           {activeTab === 'color' && (
-            <div className="bg-[#1C1C1E] rounded-xl p-4">
+            <motion.div key="color" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.18 }} className="bg-[#1C1C1E] rounded-xl p-4">
               {/* Color Grid */}
               <div className="grid grid-cols-8 gap-3">
                 {COLOR_PALETTE.map((opt) => (
@@ -452,12 +458,12 @@ function NoteEditMenu({
                   </button>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Tag Tab */}
           {activeTab === 'tag' && (
-            <div>
+            <motion.div key="tag" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.18 }}>
               {/* Existing Labels */}
               <div className="bg-[#1C1C1E] rounded-xl overflow-hidden max-h-[220px] overflow-y-auto">
                 {labels.length > 0 ? (
@@ -556,12 +562,12 @@ function NoteEditMenu({
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Icon Tab */}
           {activeTab === 'icon' && (
-            <div className="bg-[#1C1C1E] rounded-xl p-4 max-h-[250px] overflow-y-auto">
+            <motion.div key="icon" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.18 }} className="bg-[#1C1C1E] rounded-xl p-4 max-h-[250px] overflow-y-auto">
               <div className="grid grid-cols-6 gap-3">
                 {ICON_OPTIONS.map((opt) => {
                   const IconComp = opt.icon
@@ -588,8 +594,9 @@ function NoteEditMenu({
                   )
                 })}
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Action Buttons */}

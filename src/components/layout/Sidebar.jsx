@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { Folder, Document } from 'react-iconly'
 import { FileText, Layout, Star, Trash2 } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
@@ -41,9 +42,6 @@ export default function Sidebar() {
   const favoritesCount = notes.filter(n => n.pinned && !n.inTrash).length
   const trashCount = notes.filter(n => n.inTrash).length
 
-  // Don't render if sidebar is closed
-  if (!sidebarOpen) return null
-
   // Check if a document type is active
   const isDocTypeActive = (type) => activeDocumentType === type && activeFilter === 'all'
 
@@ -53,7 +51,15 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-[250px] h-full bg-[#131313] flex flex-col shrink-0 px-[30px]">
+    <motion.aside
+      animate={{
+        width: sidebarOpen ? 250 : 0,
+      }}
+      transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+      className="h-full bg-[#131313] flex flex-col shrink-0 overflow-hidden"
+      style={{ minWidth: 0, pointerEvents: sidebarOpen ? 'auto' : 'none' }}
+    >
+      <div className="flex flex-col h-full px-[30px] min-w-[250px]">
       {/* Spacer for TopBar - matches TopBar height (py-3 = 12px top/bottom + content) */}
       <div className="py-3">
         {/* Empty space where toggle button appears via fixed positioning */}
@@ -194,6 +200,7 @@ export default function Sidebar() {
           )
         })()}
       </nav>
-    </aside>
+      </div>
+    </motion.aside>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Image as ImageIcon } from 'react-iconly'
 import { Check, Plus, Palette, Tag, Grid, X } from 'lucide-react'
 import { useAppStore, LABEL_COLORS } from '../../store/appStore'
@@ -39,8 +40,6 @@ export default function NewFolderModal({ isOpen, onClose }) {
       setNewLabelColor('blue')
     }
   }, [isOpen])
-
-  if (!isOpen) return null
 
   const handleCreate = () => {
     const folderId = createFolder(name || 'New Folder')
@@ -85,16 +84,32 @@ export default function NewFolderModal({ isOpen, onClose }) {
   ]
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto max-h-[90vh] overflow-y-auto border border-[#3A3A3C]">
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={onClose}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-[#2C2C2E] w-full max-w-sm rounded-2xl pointer-events-auto max-h-[90vh] overflow-y-auto border border-[#3A3A3C]"
+            >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#3A3A3C]">
-            <button onClick={onClose} className="text-[#0A84FF] text-[15px]">Cancel</button>
+            <motion.button type="button" onClick={onClose} whileTap={{ scale: 0.97 }} className="text-[#0A84FF] text-[15px]">Cancel</motion.button>
             <span className="text-white font-medium text-[15px]">New Folder</span>
-            <button onClick={handleCreate} className="text-[#0A84FF] font-medium text-[15px]">Create</button>
+            <motion.button type="button" onClick={handleCreate} whileTap={{ scale: 0.97 }} className="text-[#0A84FF] font-medium text-[15px]">Create</motion.button>
           </div>
 
           {/* Preview */}
@@ -148,9 +163,10 @@ export default function NewFolderModal({ isOpen, onClose }) {
                 const TabIcon = tab.icon
                 const isActive = activeTab === tab.id
                 return (
-                  <button
+                  <motion.button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
+                    whileTap={{ scale: 0.97 }}
                     className={`flex-1 py-2 rounded-lg flex flex-col items-center gap-1 transition-colors ${
                       isActive ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
                     }`}
@@ -161,16 +177,17 @@ export default function NewFolderModal({ isOpen, onClose }) {
                       <TabIcon size={20} />
                     )}
                     <span className="text-[11px]">{tab.label}</span>
-                  </button>
+                  </motion.button>
                 )
               })}
             </div>
 
             {/* Tab Content */}
-            <div className="bg-[#1C1C1E] rounded-xl overflow-hidden">
+            <div className="bg-[#1C1C1E] rounded-xl overflow-hidden relative min-h-[120px]">
+              <AnimatePresence mode="wait">
               {/* Image Tab */}
               {activeTab === 'image' && (
-                <div className="p-4">
+                <motion.div key="image" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }} className="p-4">
                   <div className="h-14 flex flex-row items-center justify-center gap-2 border-2 border-dashed border-[#3A3A3C] rounded-xl px-3">
                     <ImageIcon set="broken" size={20} stroke="regular" primaryColor="#8E8E93" />
                     <p className="text-[#8E8E93] text-xs">Add Cover Image</p>
@@ -178,13 +195,12 @@ export default function NewFolderModal({ isOpen, onClose }) {
                       Choose Image
                     </button>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* Color Tab */}
-              {/* Color Tab - same palette as FolderCard dropdown; store palette id so only one selected */}
               {activeTab === 'color' && (
-                <div className="p-4">
+                <motion.div key="color" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }} className="p-4">
                   <div className="grid grid-cols-8 gap-3">
                     {COLOR_PALETTE.map((opt) => {
                       const isSelected = selectedColor === opt.id
@@ -206,12 +222,12 @@ export default function NewFolderModal({ isOpen, onClose }) {
                       )
                     })}
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* Label Tab */}
               {activeTab === 'label' && (
-                <div className="max-h-[200px] overflow-y-auto">
+                <motion.div key="label" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }} className="max-h-[200px] overflow-y-auto">
                   {labels.length > 0 ? (
                     labels.map((label, index) => (
                       <button
@@ -285,12 +301,12 @@ export default function NewFolderModal({ isOpen, onClose }) {
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               )}
 
-              {/* Icon Tab - same icons as FolderCard dropdown */}
+              {/* Icon Tab */}
               {activeTab === 'icon' && (
-                <div className="p-4 max-h-[250px] overflow-y-auto">
+                <motion.div key="icon" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }} className="p-4 max-h-[250px] overflow-y-auto">
                   <div className="grid grid-cols-6 gap-3">
                     {FOLDER_ICON_OPTIONS.map((opt) => {
                       const IconComp = opt.icon
@@ -315,12 +331,15 @@ export default function NewFolderModal({ isOpen, onClose }) {
                       )
                     })}
                   </div>
-                </div>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
           </div>
-        </div>
-      </div>
-    </>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }

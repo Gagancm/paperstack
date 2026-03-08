@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { X, Trash2, Check, Bell, FileText, Folder, Tag, Clock } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 
@@ -69,13 +70,17 @@ export default function NotificationPanel({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
-
   return (
-    <div
-      ref={panelRef}
-      className="absolute top-full right-0 mt-2 w-80 bg-[#2C2C2E] rounded-2xl border border-[#3A3A3C] shadow-2xl overflow-hidden z-50"
-    >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          ref={panelRef}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className="absolute top-full right-0 mt-2 w-80 bg-[#2C2C2E] rounded-2xl border border-[#3A3A3C] shadow-2xl overflow-hidden z-50"
+        >
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#3A3A3C] flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -160,6 +165,8 @@ export default function NotificationPanel({ isOpen, onClose }) {
           </div>
         )}
       </div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
