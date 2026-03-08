@@ -166,15 +166,15 @@ export default function ContentHeader() {
       <div className="bg-[#1C1C1E]">
         {/* Title row - show Trash/Favorites when those views, else document type (only when not in folder) */}
         {!selectedFolderId && (
-          <div className="px-[30px] py-4">
-            <h1 className="text-2xl font-bold text-white">
+          <div className="px-4 sm:px-6 ipad:px-[30px] py-3 sm:py-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-white">
               {activeFilter === 'trash' ? 'Trash' : activeFilter === 'favorites' ? 'Favorites' : currentDocType.label}
             </h1>
           </div>
         )}
 
-        {/* Controls row - same horizontal padding as TopBar (30px) for equal left/right spacing */}
-        <div className={`flex items-center px-[30px] ${selectedFolderId ? 'py-3' : 'pb-4'}`}>
+        {/* Controls row - responsive padding to match TopBar */}
+        <div className={`flex flex-wrap items-center gap-2 px-4 sm:px-6 ipad:px-[30px] ${selectedFolderId ? 'py-3' : 'pb-4'}`}>
           {/* Left side - Filter dropdown */}
           <div className="flex items-center flex-1 min-w-0">
             <div className="relative">
@@ -390,7 +390,7 @@ export default function ContentHeader() {
             <div className="relative">
               <button
                 onClick={() => setNewMenuOpen(!newMenuOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A84FF] hover:bg-[#0A84FF]/80 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-[#0A84FF] hover:bg-[#0A84FF]/80 transition-colors min-h-[44px] ipad:min-h-0"
               >
                 <Plus set="broken" size={16} stroke="regular" primaryColor="white" />
                 <span className="text-white text-sm font-medium">New</span>
@@ -561,9 +561,8 @@ export default function ContentHeader() {
               </AnimatePresence>
             </div>
 
-            {/* View options dropdown */}
-            {/* 2-col icon strip (88px) - aligns with TopBar bell | profile */}
-            <div className="w-[88px] shrink-0 grid grid-cols-2 gap-0 items-center justify-items-center">
+            {/* View options dropdown - 2-col icon strip, aligns with TopBar */}
+            <div className="w-14 sm:w-20 ipad:w-[88px] shrink-0 grid grid-cols-2 gap-0 items-center justify-items-center">
               <div className="relative flex items-center justify-center w-10 h-10">
                 <button 
                   onClick={() => setViewMenuOpen(!viewMenuOpen)}

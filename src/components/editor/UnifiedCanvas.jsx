@@ -496,16 +496,16 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[#1C1C1E] relative">
-      {/* Toolbar Container */}
-      <div ref={toolbarRef} className="relative z-20">
-        {/* Top Toolbar - GoodNotes style */}
-        <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] h-11 flex items-center px-3">
-          {/* Left Section: Pages, Search, Undo/Redo - fixed width for true centering */}
-          <div className="flex items-center gap-0.5 w-[100px]">
+      {/* Toolbar Container - scrolls horizontally on narrow screens (iPad portrait / mobile) */}
+      <div ref={toolbarRef} className="relative z-20 shrink-0">
+        {/* Top Toolbar - responsive height and padding for iPad/mobile */}
+        <div className="bg-[#2C2C2E] border-b border-[#3A3A3C] min-h-[44px] h-11 flex items-center px-2 sm:px-3 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Left Section: Pages, Search, Undo/Redo */}
+          <div className="flex items-center gap-0.5 w-20 sm:w-[100px] shrink-0">
             {/* Pages Panel Toggle */}
             <button
               onClick={() => { closeAllMenus(); setShowPagesPanel(!showPagesPanel) }}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
                 showPagesPanel ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
               }`}
               title="Pages"
@@ -516,7 +516,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             {/* Search */}
             <button
               onClick={() => { closeAllMenus(); setShowSearchPanel(!showSearchPanel) }}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
                 showSearchPanel ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
               }`}
               title="Search"
@@ -524,13 +524,13 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
               <Search size={18} />
             </button>
 
-            <div className="w-px h-5 bg-[#3A3A3C] mx-1" />
+            <div className="w-px h-5 bg-[#3A3A3C] mx-0.5 sm:mx-1 shrink-0" />
 
             {/* Undo/Redo */}
             <button
               onClick={handleUndo}
               disabled={undoStack.length <= 1}
-              className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
+              className="p-2 sm:p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30 min-w-[36px] min-h-[36px] flex items-center justify-center shrink-0"
               title="Undo"
             >
               <Undo2 size={18} />
@@ -538,15 +538,15 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             <button
               onClick={handleRedo}
               disabled={redoStack.length === 0}
-              className="p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30"
+              className="p-2 sm:p-1.5 rounded-lg text-[#8E8E93] hover:bg-[#3A3A3C] disabled:opacity-30 min-w-[36px] min-h-[36px] flex items-center justify-center shrink-0"
               title="Redo"
             >
               <Redo2 size={18} />
             </button>
           </div>
 
-          {/* Center Section: Main Tools + Accessories - always centered */}
-          <div className="flex-1 flex items-center justify-center gap-0.5">
+          {/* Center Section: Main Tools - scrollable on narrow screens */}
+          <div className="flex-1 flex items-center justify-center gap-0.5 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {MAIN_TOOLS.map((tool) => {
               const Icon = tool.icon
               const isActive = activeTool === tool.id
@@ -628,11 +628,11 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </button>
           </div>
 
-          {/* Right Section: Add Page, Share, Page Settings - fixed width to match left for true centering */}
-          <div className="flex items-center gap-0.5 w-[100px] justify-end">
+          {/* Right Section: Add Page, Share, Page Settings */}
+          <div className="flex items-center gap-0.5 w-20 sm:w-[100px] justify-end shrink-0">
             <button
               onClick={() => { closeAllMenus(); setShowAddPageMenu(!showAddPageMenu) }}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
                 showAddPageMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
               }`}
               title="Add Page"
@@ -641,7 +641,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </button>
             <button
               onClick={() => { closeAllMenus(); setShowShareMenu(!showShareMenu) }}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
                 showShareMenu ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
               }`}
               title="Share"
@@ -650,7 +650,7 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
             </button>
             <button
               onClick={() => { closeAllMenus(); setShowPageSettings(!showPageSettings) }}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-2 sm:p-1.5 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
                 showPageSettings ? 'bg-[#0A84FF] text-white' : 'text-[#8E8E93] hover:bg-[#3A3A3C]'
               }`}
               title="Page Settings"
@@ -662,9 +662,9 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
 
       </div>
 
-      {/* Floating Pen Tool Options - Positioned over canvas */}
+      {/* Floating Pen Tool Options - responsive top for safe area / toolbar height */}
       {(activeTool === 'pen' || activeTool === 'pencil' || activeTool === 'highlighter') && (
-        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+        <div className="absolute top-12 sm:top-[52px] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
               {/* Undo in sub-bar */}
               <button
@@ -742,9 +742,9 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         </div>
       )}
 
-      {/* Floating Text Tool Options - Positioned over canvas */}
+      {/* Floating Text Tool Options */}
       {activeTool === 'text' && (
-        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+        <div className="absolute top-12 sm:top-[52px] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
               {/* Color picker */}
               <button
@@ -832,9 +832,9 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         </div>
       )}
 
-      {/* Floating Shapes Tool Options - Positioned over canvas */}
+      {/* Floating Shapes Tool Options */}
       {activeTool === 'shapes' && (
-        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+        <div className="absolute top-12 sm:top-[52px] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-1 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
               {SHAPE_TYPES.map((shape) => {
                 const Icon = shape.icon
@@ -863,9 +863,9 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
         </div>
       )}
 
-      {/* Floating Eraser Tool Options - Positioned over canvas */}
+      {/* Floating Eraser Tool Options */}
       {activeTool === 'eraser' && (
-        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-30">
+        <div className="absolute top-12 sm:top-[52px] left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-2rem)] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-2 bg-[#1C1C1E] rounded-full px-3 py-2 shadow-lg border border-[#3A3A3C]">
               <span className="text-xs text-[#8E8E93]">Standard</span>
               <ChevronDown size={12} className="text-[#8E8E93]" />
@@ -1314,10 +1314,10 @@ const UnifiedCanvas = forwardRef(function UnifiedCanvas({ noteId, paperTemplate,
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Pages Panel (Left Sidebar) */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Pages Panel (Left) - responsive width on iPad/mobile */}
         {showPagesPanel && (
-          <div className="w-64 bg-[#2C2C2E] border-r border-[#3A3A3C] flex flex-col">
+          <div className="w-56 sm:w-64 bg-[#2C2C2E] border-r border-[#3A3A3C] flex flex-col shrink-0">
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#3A3A3C]">
               <div className="flex items-center gap-2">

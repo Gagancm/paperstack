@@ -13,24 +13,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#1C1C1E] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen w-full bg-[#1C1C1E] flex flex-col items-center justify-center p-4 sm:p-6 ipad:p-8 safe-area-pb safe-area-pt">
       {/* Logo */}
-      <div className="mb-8 text-center">
-        <div className="w-20 h-20 rounded-2xl bg-[#0A84FF] flex items-center justify-center mx-auto mb-4">
-          <span className="text-4xl">📝</span>
+      <div className="mb-6 sm:mb-8 text-center">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#0A84FF] flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <span className="text-3xl sm:text-4xl">📝</span>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">PaperStack</h1>
-        <p className="text-[#8E8E93]">Your personal notes, everywhere</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">PaperStack</h1>
+        <p className="text-sm sm:text-base text-[#8E8E93]">Your personal notes, everywhere</p>
       </div>
 
-      {/* Login Card */}
-      <div className="w-full max-w-sm bg-[#2C2C2E] rounded-2xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-2 text-center">Welcome</h2>
-        <p className="text-[#8E8E93] text-center mb-6">Sign in to sync your notes</p>
+      {/* Login Card - comfortable on iPad and mobile */}
+      <div className="w-full max-w-sm bg-[#2C2C2E] rounded-2xl p-4 sm:p-6 ipad:p-8">
+        <h2 className="text-lg sm:text-xl font-semibold text-white mb-2 text-center">Welcome</h2>
+        <p className="text-[#8E8E93] text-center mb-4 sm:mb-6 text-sm sm:text-base">Sign in to sync your notes</p>
 
         <button
           onClick={handleDemoLogin}
-          className="w-full py-3 px-4 bg-[#3A3A3C] hover:bg-[#48484A] rounded-xl flex items-center justify-center gap-3 transition-colors mb-3"
+          className="w-full py-3 px-4 bg-[#3A3A3C] hover:bg-[#48484A] rounded-xl flex items-center justify-center gap-3 transition-colors mb-3 min-h-[48px]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleDemoLogin}
-          className="w-full py-3 px-4 bg-[#0A84FF] hover:bg-[#0A84FF]/80 rounded-xl font-medium text-white transition-colors"
+          className="w-full py-3 px-4 bg-[#0A84FF] hover:bg-[#0A84FF]/80 rounded-xl font-medium text-white transition-colors min-h-[48px]"
         >
           Try Demo Mode
         </button>
@@ -53,19 +53,19 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Features */}
-      <div className="mt-8 grid grid-cols-3 gap-4 max-w-sm">
+      {/* Features - responsive for mobile and iPad */}
+      <div className="mt-6 sm:mt-8 grid grid-cols-3 gap-3 sm:gap-4 max-w-sm w-full">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-xl">✏️</div>
-          <p className="text-[#8E8E93] text-xs">Type & Draw</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-lg sm:text-xl">✏️</div>
+          <p className="text-[#8E8E93] text-[10px] sm:text-xs">Type & Draw</p>
         </div>
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-xl">🔄</div>
-          <p className="text-[#8E8E93] text-xs">Auto Sync</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-lg sm:text-xl">🔄</div>
+          <p className="text-[#8E8E93] text-[10px] sm:text-xs">Auto Sync</p>
         </div>
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-xl">📱</div>
-          <p className="text-[#8E8E93] text-xs">Works Offline</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#2C2C2E] mx-auto mb-2 flex items-center justify-center text-lg sm:text-xl">📱</div>
+          <p className="text-[#8E8E93] text-[10px] sm:text-xs">Works Offline</p>
         </div>
       </div>
     </div>

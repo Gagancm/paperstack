@@ -120,15 +120,14 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
 
   return (
     <motion.div 
-      className="flex flex-col items-center cursor-pointer group"
+      className="flex flex-col items-center cursor-pointer group w-[100px] sm:w-[110px] ipad:w-[120px]"
       onClick={handleCardClick}
-      style={{ width: '120px' }}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
     >
-      {/* Folder graphic - square macOS style */}
-      <div className="relative w-[100px] h-[85px] mb-2">
+      {/* Folder graphic - responsive for mobile / iPad / desktop */}
+      <div className="relative w-[80px] h-[68px] sm:w-[90px] sm:h-[76px] ipad:w-[100px] ipad:h-[85px] mb-2">
         {/* Shadow */}
         <div 
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] h-[6px] rounded-[50%] bg-black/30 blur-[3px]"
@@ -176,18 +175,18 @@ export default function FolderCard({ folder, noteCount = 0, onClick, onDelete })
       </div>
 
       {/* Folder info */}
-      <div className="w-full text-center px-1">
+      <div className="w-full text-center px-0.5 sm:px-1">
         <div className="flex items-center justify-center gap-0.5">
-          <p className="text-white font-medium text-sm truncate max-w-[85px]">{folder.name}</p>
+          <p className="text-white font-medium text-xs sm:text-sm truncate max-w-[70px] sm:max-w-[85px]">{folder.name}</p>
           <button
             ref={menuButtonRef}
             onClick={openMenu}
-            className="p-0.5 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF]"
+            className="p-1.5 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0 ipad:p-0.5"
           >
-            <ChevronDown set="broken" size={12} stroke="regular" />
+            <ChevronDown set="broken" size={14} stroke="regular" />
           </button>
         </div>
-        <p className="text-[#8E8E93] text-[11px]">
+        <p className="text-[#8E8E93] text-[10px] sm:text-[11px]">
           {formatDate(folder.updatedAt)}
         </p>
       </div>

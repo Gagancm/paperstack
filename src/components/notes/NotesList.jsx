@@ -80,7 +80,7 @@ export default function NotesList() {
 
   return (
     <div className={`flex-1 bg-[#1C1C1E] flex flex-col min-h-0 ${hasContent ? 'overflow-y-auto' : 'overflow-hidden flex items-center justify-center'}`}>
-      <div className={hasContent ? 'py-6 px-[30px]' : 'w-full flex items-center justify-center px-[30px]'}>
+      <div className={hasContent ? 'py-4 sm:py-6 px-4 sm:px-6 ipad:px-[30px]' : 'w-full flex items-center justify-center px-4 sm:px-6 ipad:px-[30px]'}>
         {hasContent ? (
           <motion.div className="flex flex-col gap-8" variants={listContainer} initial="hidden" animate="show">
             {/* Folders Section */}
@@ -88,7 +88,7 @@ export default function NotesList() {
               <div>
                 <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">Folders</h3>
                 {viewMode === 'grid' ? (
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     {folders.map((folder) => (
                       <motion.div key={folder.id} variants={listItem}>
                         <FolderCard
@@ -125,7 +125,7 @@ export default function NotesList() {
                     <div key={type}>
                       <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{label}</h3>
                       {viewMode === 'grid' ? (
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-3 sm:gap-4">
                           {typeNotes.map((note) => (
                             <motion.div key={note.id} variants={listItem}>
                               <NoteCard
@@ -157,7 +157,7 @@ export default function NotesList() {
                   <div>
                     {showFolders && <h3 className="text-[#8E8E93] text-xs uppercase tracking-wider mb-4">{docTypeInfo.label}</h3>}
                     {viewMode === 'grid' ? (
-                      <div className="flex flex-wrap gap-4">
+                      <div className="flex flex-wrap gap-3 sm:gap-4">
                         {filteredNotes.map((note) => (
                           <motion.div key={note.id} variants={listItem}>
                             <NoteCard

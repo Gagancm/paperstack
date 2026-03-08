@@ -50,16 +50,18 @@ export default function Sidebar() {
     setActiveFilter('all')
   }
 
+  const sidebarWidth = 250
+
   return (
     <motion.aside
       animate={{
-        width: sidebarOpen ? 250 : 0,
+        width: sidebarOpen ? sidebarWidth : 0,
       }}
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-      className="h-full bg-[#131313] flex flex-col shrink-0 overflow-hidden"
-      style={{ minWidth: 0, pointerEvents: sidebarOpen ? 'auto' : 'none' }}
+      className="h-full bg-[#131313] flex flex-col shrink-0 overflow-hidden lg:relative fixed left-0 top-0 z-50 lg:z-auto"
+      style={{ minWidth: 0, pointerEvents: sidebarOpen ? 'auto' : 'none', maxWidth: '85vw' }}
     >
-      <div className="flex flex-col h-full px-[30px] min-w-[250px]">
+      <div className={`flex flex-col h-full px-4 sm:px-6 ipad:px-[30px] min-w-[250px]`}>
       {/* Spacer for TopBar - matches TopBar height (py-3 = 12px top/bottom + content) */}
       <div className="py-3">
         {/* Empty space where toggle button appears via fixed positioning */}

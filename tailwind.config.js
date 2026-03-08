@@ -7,8 +7,12 @@ export default {
   theme: {
     extend: {
       screens: {
-        'ipad': '768px',
-        'ipad-lg': '1024px',
+        /* Mobile first: sm=640, md=768, lg=1024, xl=1280, 2xl=1536 */
+        'ipad-mini': '768px',   /* iPad Mini portrait */
+        'ipad': '810px',        /* iPad 10.2" */
+        'ipad-pro': '834px',    /* iPad Pro 11" */
+        'ipad-lg': '1024px',    /* iPad Pro 12.9" / small desktop */
+        'desktop': '1280px',
       },
       fontFamily: {
         'sf': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Arial', 'sans-serif'],

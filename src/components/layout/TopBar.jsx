@@ -37,28 +37,28 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="flex items-center gap-4 py-3 bg-[#1C1C1E] pl-[30px] pr-[30px]">
-        {/* Left: Spacer for toggle button - matches right icon strip width so padding is balanced */}
-        <div className="w-[88px] shrink-0" />
+      <header className="flex items-center gap-2 sm:gap-4 py-3 bg-[#1C1C1E] pl-4 pr-4 sm:pl-6 sm:pr-6 ipad:pl-[30px] ipad:pr-[30px] safe-area-pl safe-area-pr">
+        {/* Left: Spacer for toggle button - matches right icon strip so padding is balanced */}
+        <div className="w-14 sm:w-20 ipad:w-[88px] shrink-0" />
 
-        {/* Center: Search trigger - always centered */}
+        {/* Center: Search trigger - full width on mobile, centered max-w on larger */}
         <div className="flex-1 flex justify-center min-w-0">
           <button
             onClick={() => setSearchOpen(true)}
-            className="w-full max-w-md flex items-center gap-3 bg-[#2C2C2E] text-[#6E6E73] rounded-full py-2.5 px-4 hover:bg-[#3A3A3C] transition-colors text-sm text-left"
+            className="w-full max-w-md flex items-center gap-2 sm:gap-3 bg-[#2C2C2E] text-[#6E6E73] rounded-full py-2.5 px-3 sm:px-4 hover:bg-[#3A3A3C] transition-colors text-xs sm:text-sm text-left min-h-[44px]"
           >
-            <Search set="broken" size={16} stroke="regular" />
-            <span>{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
+            <Search set="broken" size={16} stroke="regular" className="shrink-0" />
+            <span className="truncate">{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
           </button>
         </div>
 
-        {/* Right: 2-col icon strip - bell | profile (aligns with grid | cloud in ContentHeader) */}
-        <div className="w-[88px] shrink-0 grid grid-cols-2 gap-0 items-center justify-items-center">
+        {/* Right: 2-col icon strip - bell | profile */}
+        <div className="w-14 sm:w-20 ipad:w-[88px] shrink-0 grid grid-cols-2 gap-0 items-center justify-items-center">
           <div className="relative flex items-center justify-center w-10 h-10">
             <button
               ref={notificationBtnRef}
               onClick={() => setNotificationOpen(!notificationOpen)}
-              className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93] relative"
+              className="p-2 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#8E8E93] relative min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Notification set="broken" size={18} stroke="regular" />
               {unreadCount > 0 && (
@@ -73,7 +73,7 @@ export default function TopBar() {
             />
           </div>
           <div className="flex items-center justify-center w-10 h-10">
-            <button className="rounded-full hover:bg-[#3A3A3C] transition-colors flex items-center justify-center w-9 h-9" title="Profile">
+            <button className="rounded-full hover:bg-[#3A3A3C] transition-colors flex items-center justify-center w-9 h-9 min-w-[44px] min-h-[44px]" title="Profile">
               {user?.avatar ? (
                 <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
               ) : (

@@ -38,11 +38,21 @@ export default function AppPage() {
 
   return (
     <div className="h-screen w-full bg-[#1C1C1E] text-white flex overflow-hidden">
-      {/* Fixed toggle button and back button - always in same position, 30px from left */}
-      <div className="fixed top-3 left-[30px] z-50 flex items-center gap-1">
+      {/* Backdrop when sidebar open on tablet/mobile (below lg) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* Toggle and back: responsive left spacing (safe area on iPad/mobile) */}
+      <div className="fixed top-3 left-4 sm:left-6 ipad:left-[30px] z-50 flex items-center gap-1 safe-area-pt">
         <button
           onClick={toggleSidebar}
-          className="p-2 -ml-2 rounded-lg hover:bg-[#3A3A3C] transition-colors"
+          className="p-2 -ml-2 rounded-lg hover:bg-[#3A3A3C] transition-colors touch-target min-w-[44px] min-h-[44px] flex items-center justify-center lg:min-w-0 lg:min-h-0"
+          aria-label="Toggle sidebar"
         >
           <PanelLeft size={20} className="text-[#8E8E93]" />
         </button>
@@ -54,12 +64,12 @@ export default function AppPage() {
             className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg hover:bg-[#3A3A3C] transition-colors text-[#0A84FF]"
           >
             <ChevronLeft size={18} />
-            <span className="text-sm font-medium">All Notes</span>
+            <span className="text-sm font-medium hidden sm:inline">All Notes</span>
           </button>
         )}
       </div>
 
-      {/* Sidebar - always in the document flow when open */}
+      {/* Sidebar: overlay on tablet/mobile, in-flow on desktop */}
       <Sidebar />
 
       {/* Main content - takes remaining space */}
@@ -76,8 +86,8 @@ export default function AppPage() {
         )}
       </AnimatePresence>
 
-      {/* Toast Notifications */}
-      <div className="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none">
+      {/* Toast Notifications - responsive position (safe area on iPad/mobile) */}
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 ipad:bottom-6 ipad:right-6 z-[60] flex flex-col gap-2 pointer-events-none safe-area-pb safe-area-pr">
         <div className="flex flex-col gap-2 pointer-events-auto">
           <AnimatePresence mode="popLayout">
             {toasts.map((toast) => (

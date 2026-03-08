@@ -93,21 +93,21 @@ export default function NoteEditor({ onClose }) {
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-50 bg-[#1C1C1E] flex flex-col"
     >
-      {/* Header - matches home/folder design */}
-      <div className="flex items-center px-3 h-11 bg-[#2C2C2E] border-b border-[#3A3A3C]">
-        {/* Left: Back button - fixed width for true centering */}
-        <div className="flex items-center w-[100px]">
-          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#0A84FF]">
+      {/* Header - responsive height and touch targets for iPad/mobile */}
+      <div className="flex items-center px-3 sm:px-4 h-12 sm:h-11 bg-[#2C2C2E] border-b border-[#3A3A3C] safe-area-pt">
+        {/* Left: Back button - fixed width for centering */}
+        <div className="flex items-center w-20 sm:w-[100px]">
+          <button onClick={handleClose} className="p-2 sm:p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#0A84FF] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0">
             <ChevronLeft set="broken" size={18} stroke="regular" />
           </button>
         </div>
 
         {/* Center: Folder / Note Title */}
-        <div className="flex-1 flex justify-center items-center gap-1.5">
+        <div className="flex-1 flex justify-center items-center gap-1.5 min-w-0">
           {currentFolder && (
             <>
-              <span className="text-[15px] text-[#8E8E93]">{currentFolder.name}</span>
-              <span className="text-[15px] text-[#8E8E93]">/</span>
+              <span className="text-sm sm:text-[15px] text-[#8E8E93] truncate max-w-[80px] sm:max-w-none">{currentFolder.name}</span>
+              <span className="text-[15px] text-[#8E8E93] shrink-0">/</span>
             </>
           )}
           <input
@@ -115,16 +115,16 @@ export default function NoteEditor({ onClose }) {
             value={note.title}
             onChange={(e) => updateNote(note.id, { title: e.target.value })}
             placeholder="Untitled"
-            className="text-[15px] font-medium text-white bg-transparent border-none outline-none placeholder-[#8E8E93] text-center max-w-[200px]"
+            className="text-sm sm:text-[15px] font-medium text-white bg-transparent border-none outline-none placeholder-[#8E8E93] text-center w-full max-w-[140px] sm:max-w-[200px]"
             maxLength={60}
           />
         </div>
 
-        {/* Right: Actions - fixed width to match left for true centering */}
-        <div className="flex items-center gap-0.5 w-[100px] justify-end">
+        {/* Right: Actions - fixed width to match left */}
+        <div className="flex items-center gap-0.5 w-20 sm:w-[100px] justify-end shrink-0">
           <button
             onClick={() => togglePinNote(note.id)}
-            className={`p-1.5 rounded-lg hover:bg-[#3A3A3C] ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
+            className={`p-2 sm:p-1.5 rounded-lg hover:bg-[#3A3A3C] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0 ${note.pinned ? 'text-yellow-500' : 'text-[#8E8E93]'}`}
           >
             <Star set={note.pinned ? 'bold' : 'broken'} size={18} stroke="regular" />
           </button>
@@ -132,7 +132,7 @@ export default function NoteEditor({ onClose }) {
           <div className="relative">
             <button 
               onClick={() => setShowLabelPicker(!showLabelPicker)} 
-              className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]"
+              className="p-2 sm:p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0"
             >
               <Tag size={18} />
             </button>
@@ -188,7 +188,7 @@ export default function NoteEditor({ onClose }) {
           <div className="relative">
             <button 
               onClick={() => setShowMenu(!showMenu)} 
-              className="p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93]"
+              className="p-2 sm:p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#8E8E93] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0"
             >
               <MoreSquare set="broken" size={18} stroke="regular" />
             </button>

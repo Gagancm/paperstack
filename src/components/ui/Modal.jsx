@@ -16,15 +16,15 @@ export default function Modal({ isOpen, onClose, title, children }) {
             onClick={onClose}
           />
           
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Modal - responsive padding and safe area for iPad/mobile */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none safe-area-pb safe-area-pt">
             <motion.div
               key="modal-panel"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="modal-panel w-full max-w-md pointer-events-auto bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] overflow-hidden"
+              className="modal-panel w-full max-w-md max-h-[90vh] overflow-y-auto pointer-events-auto bg-[#2C2C2E] rounded-2xl shadow-xl border border-[#3A3A3C] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

@@ -122,28 +122,27 @@ export default function NoteCard({ note, onClick, isSelected }) {
 
   return (
     <motion.div 
-      className="flex flex-col items-center cursor-pointer group"
+      className="flex flex-col items-center cursor-pointer group w-[100px] sm:w-[110px] ipad:w-[120px]"
       onClick={handleCardClick}
-      style={{ width: '120px' }}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
     >
-      {/* Notebook graphic - taller portrait style like Goodnotes */}
-      <div className={`relative w-[90px] h-[115px] mb-2 ${isSelected ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#1C1C1E] rounded-lg' : ''}`}>
+      {/* Notebook graphic - responsive size for mobile / iPad / desktop */}
+      <div className={`relative w-[70px] h-[90px] sm:w-[80px] sm:h-[102px] ipad:w-[90px] ipad:h-[115px] mb-2 ${isSelected ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#1C1C1E] rounded-lg' : ''}`}>
         {/* Shadow */}
         <div 
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[6px] rounded-[50%] bg-black/30 blur-[3px]"
         />
         
-        {/* Notebook body */}
+        {/* Notebook body - height scales with container */}
         <div 
-          className="absolute bottom-[4px] left-0 right-0 h-[105px] rounded-lg transition-transform group-hover:scale-[1.02] overflow-hidden flex"
+          className="absolute bottom-[4px] left-0 right-0 h-[calc(100%-14px)] min-h-[75px] sm:min-h-[85px] ipad:min-h-[105px] rounded-lg transition-transform group-hover:scale-[1.02] overflow-hidden flex"
           style={{ backgroundColor: colors.main }}
         >
           {/* Spine (left edge) - darker, like book binding */}
           <div 
-            className="w-[10px] h-full flex-shrink-0 relative"
+            className="w-[8px] sm:w-[10px] h-full flex-shrink-0 relative"
             style={{ backgroundColor: colors.spine }}
           >
             {/* Spine ridge lines */}
@@ -153,7 +152,7 @@ export default function NoteCard({ note, onClick, isSelected }) {
           
           {/* Inner cover accent stripe */}
           <div 
-            className="w-[8px] h-full flex-shrink-0"
+            className="w-[6px] sm:w-[8px] h-full flex-shrink-0"
             style={{ backgroundColor: colors.accent }}
           />
           
@@ -181,13 +180,13 @@ export default function NoteCard({ note, onClick, isSelected }) {
             {/* Custom Icon in center */}
             {IconComponent && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <IconComponent size={28} className="text-white/80" />
+                <IconComponent size={24} className="text-white/80" />
               </div>
             )}
             
             {/* Favorite star */}
             {note.pinned && (
-              <div className="absolute top-2 right-2 text-white/90">
+              <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 text-white/90">
                 <Star set="bold" size={14} filled />
               </div>
             )}
@@ -196,21 +195,21 @@ export default function NoteCard({ note, onClick, isSelected }) {
       </div>
 
       {/* Note info: left = name + day, right = dropdown */}
-      <div className="w-full px-1 flex items-center justify-between gap-2">
+      <div className="w-full px-0.5 sm:px-1 flex items-center justify-between gap-1 sm:gap-2">
         <div className="min-w-0 flex-1 text-left">
-          <p className="text-white font-medium text-sm truncate">
+          <p className="text-white font-medium text-xs sm:text-sm truncate">
             {note.title || 'Untitled'}
           </p>
-          <p className="text-[#8E8E93] text-[11px]">
+          <p className="text-[#8E8E93] text-[10px] sm:text-[11px]">
             {formatDate(note.updatedAt)}
           </p>
         </div>
         <button
           ref={menuButtonRef}
           onClick={openMenu}
-          className="p-1 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF]"
+          className="p-1.5 rounded hover:bg-white/10 transition-colors shrink-0 text-[#0A84FF] min-w-[44px] min-h-[44px] flex items-center justify-center ipad:min-w-0 ipad:min-h-0 ipad:p-1"
         >
-          <ChevronDown set="broken" size={20} stroke="regular" />
+          <ChevronDown set="broken" size={18} className="sm:w-5 sm:h-5 ipad:w-5 ipad:h-5" stroke="regular" />
         </button>
       </div>
 
